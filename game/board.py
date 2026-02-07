@@ -1,10 +1,10 @@
 # game/board.py
 from __future__ import annotations
 
-from typing import List, Tuple
+from typing import List, Tuple, Optional, Dict, Any
 from copy import deepcopy
 
-from .types import GameConfig, GameState, MoveResult, Player, Cell, Move
+from .types import GameConfig, GameState, MoveResult, Player, Cell, Move, Coord
 from .rules import check_winner, is_draw
 from .history import HistoryStack
 
@@ -55,7 +55,7 @@ def _switch_player(p: Player) -> Player:
     return "O" if p == "X" else "X"
 
 
-def apply_move(
+def apply_move_rc(
     state: GameState,
     config: GameConfig,
     history: HistoryStack,
@@ -98,7 +98,7 @@ def apply_move(
     return MoveResult(True, "OK", state)
 
 
-def undo(state: GameState, history: HistoryStack) -> MoveResult:
+def undo_rc(state: GameState, history: HistoryStack) -> MoveResult:
     """
     Restores the previous state snapshot from history.
     """
@@ -107,7 +107,6 @@ def undo(state: GameState, history: HistoryStack) -> MoveResult:
         return MoveResult(False, "Nothing to undo.", state)
 
     snap = item.state_snapshot
-    # restore fields
     state.board = snap.board
     state.current_player = snap.current_player
     state.winner = snap.winner
@@ -118,7 +117,7 @@ def undo(state: GameState, history: HistoryStack) -> MoveResult:
     return MoveResult(True, "UNDONE", state)
 
 
-def reset(state: GameState, config: GameConfig, history: HistoryStack) -> MoveResult:
+def reset_rc(state: GameState, config: GameConfig, history: HistoryStack) -> MoveResult:
     """
     Resets the game to initial state.
     """
@@ -133,3 +132,54 @@ def reset(state: GameState, config: GameConfig, history: HistoryStack) -> MoveRe
     state.move_count = 0
 
     return MoveResult(True, "RESET", state)
+
+
+# ==========================================================
+# ✅ COMPATIBILITY LAYER (what Flask + AI will call)
+# ==========================================================
+
+def legal_moves(state: GameState) -> List[int]:
+    """Return legal moves as positions 0..n*n-1 (Flask-friendly)."""
+    n = len(state.board)
+    return [r * n + c for (r, c) in available_moves(state)]
+
+
+def _pos_to_rc(state: GameState, pos: int) -> Tuple[int, int]:
+    n = len(state.board)
+    pos = int(pos)
+    return pos // n, pos % n
+
+
+def check_status(state: GameState) -> Dict[str, Any]:
+    """Return Flask-friendly status object."""
+    if state.winner is not None:
+        return {"state": "WIN", "winner": state.winner, "winLine": state.win_line}
+    if state.is_draw:
+        return {"state": "DRAW", "winner": None, "winLine": None}
+    return {"state": "ONGOING", "winner": None, "winLine": None}
+
+
+def apply_move(state: GameState, config: GameConfig, history: HistoryStack, pos: int) -> GameState:
+    """
+    Flask-friendly apply_move using a single 'pos'.
+    Raises ValueError on invalid move.
+    """
+    r, c = _pos_to_rc(state, pos)
+    res = apply_move_rc(state, config, history, r, c)
+    if not res.valid:
+        raise ValueError(res.message)
+    return res.state
+
+
+def undo(state: GameState, history: HistoryStack) -> GameState:
+    res = undo_rc(state, history)
+    if not res.valid:
+        raise ValueError(res.message)
+    return res.state
+
+
+def reset(state: GameState, config: GameConfig, history: HistoryStack) -> GameState:
+    res = reset_rc(state, config, history)
+    if not res.valid:
+        raise ValueError(res.message)
+    return res.state
