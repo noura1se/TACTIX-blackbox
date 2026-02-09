@@ -1,0 +1,61 @@
+{% extends "layout.html" %}
+{% block title %}TACTIX // BLACKBOX{% endblock %}
+
+{% block content %}
+<section class="bb-layout">
+  <!-- LEFT -->
+  <div class="bb-panel">
+    <div class="bb-kicker">NEURAL TACTICS SIMULATION</div>
+    <div class="bb-h1">TACTIX <span class="bb-led">BLACKBOX</span></div>
+    <p class="bb-sub">
+      A minimal, cinematic interface where the Operator challenges the System.
+      Configure your grid, select the protocol, and breach the board.
+    </p>
+
+    <div class="bb-mt-24 bb-row">
+      {% set href="/configure" %}
+      {% set variant="primary" %}
+      {% set size="lg" %}
+      {% set label="INITIATE BREACH" %}
+      {% set icon="⟡" %}
+      {% include "partials/neon_button.html" %}
+    </div>
+
+    <div class="bb-divider"></div>
+
+    <div class="bb-frame">
+      {% with text="Awaiting operator input...", blink=True %}
+        {% include "partials/terminal_line.html" %}
+      {% endwith %}
+      {% with text="Protocols loaded: 3x3 / 4x4 / 5x5", blink=False %}
+        {% include "partials/terminal_line.html" %}
+      {% endwith %}
+      {% with text="Press INITIATE BREACH to begin.", blink=False %}
+        {% include "partials/terminal_line.html" %}
+      {% endwith %}
+    </div>
+  </div>
+
+  <!-- RIGHT -->
+  <div class="bb-side-stack">
+    {% set title="MISSION PANEL" %}
+    {% set body="<div class='bb-sub'>Breach the position. Extract control. Leave no trace.</div>" %}
+    {% include "partials/neon_card.html" %}
+
+    {% set title="PHASES" %}
+    {% set body="<ul class='bb-sub' style='margin:0;padding-left:18px;line-height:1.8'>
+      <li>Phase 1: Engine ✅</li>
+      <li>Phase 2: Neon UI ✅</li>
+      <li>Phase 3: Stats</li>
+    </ul>" %}
+    {% include "partials/neon_card.html" %}
+
+    {% set title="MODES" %}
+    {% set body="<ul class='bb-sub' style='margin:0;padding-left:18px;line-height:1.8'>
+      <li>Operator vs System (AI)</li>
+      <li>Operator vs Operator</li>
+    </ul>" %}
+    {% include "partials/neon_card.html" %}
+  </div>
+</section>
+{% endblock %}

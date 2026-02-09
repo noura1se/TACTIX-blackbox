@@ -1,0 +1,64 @@
+/* static/css/animations.css */
+
+@keyframes bbFadeIn{
+  from{ opacity:0; transform: translateY(4px); }
+  to{ opacity:1; transform: translateY(0); }
+}
+
+@keyframes bbRise{
+  from{ opacity:0; transform: translateY(10px) scale(.98); }
+  to{ opacity:1; transform: translateY(0) scale(1); }
+}
+
+/* Terminal flicker (subtle) */
+@keyframes bbFlicker{
+  0%, 100%{ opacity:1; }
+  50%{ opacity:.92; }
+  52%{ opacity:.98; }
+  55%{ opacity:.88; }
+  60%{ opacity:1; }
+}
+
+/* “Access granted” typing glow */
+@keyframes bbPulseGlow{
+  0%,100%{ filter: drop-shadow(0 0 10px rgba(111,227,255,.20)); }
+  50%{ filter: drop-shadow(0 0 16px rgba(111,227,255,.45)); }
+}
+
+/* Button shine sweep */
+@keyframes bbSweep{
+  0%{ transform: translateX(-140%) skewX(-18deg); opacity:0; }
+  10%{ opacity:.35; }
+  35%{ opacity:.22; }
+  60%{ opacity:0; }
+  100%{ transform: translateX(140%) skewX(-18deg); opacity:0; }
+}
+
+/* Classes */
+.bb-flicker{ animation: bbFlicker 3.6s infinite; }
+.bb-pulseglow{ animation: bbPulseGlow 2.0s infinite; }
+
+.bb-btn.bb-sweep{
+  position:relative;
+  overflow:hidden;
+}
+.bb-btn.bb-sweep:before{
+  content:"";
+  position:absolute;
+  top:-40%;
+  left:-60%;
+  width: 42%;
+  height: 180%;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,.22), transparent);
+  animation: bbSweep 3.8s infinite;
+  opacity:0;
+}
+
+/* Mark appear animation */
+.bb-pop{
+  animation: bbPop .16s ease-out;
+}
+@keyframes bbPop{
+  from{ transform: scale(.85); opacity:.6; }
+  to{ transform: scale(1); opacity:1; }
+}

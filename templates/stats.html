@@ -1,0 +1,33 @@
+{% extends "layout.html" %}
+{% block content %}
+
+<div class="bb-panel">
+  <div class="bb-h1 bb-danger">BREACH REPORT</div>
+  <div class="bb-sub">System telemetry and operator performance.</div>
+
+  <div class="bb-divider"></div>
+
+  <div id="totals" class="bb-row" style="gap:14px;flex-wrap:wrap;"></div>
+
+  <div class="bb-divider"></div>
+
+  <div class="bb-block">
+    <div class="bb-block-title">GLOBAL TOTALS</div>
+    <div id="totalsTable" class="bb-frame"></div>
+  </div>
+
+  <div class="bb-block">
+    <div class="bb-block-title">RECENT GAMES</div>
+    <div id="recentTable" class="bb-frame"></div>
+  </div>
+
+  <div class="bb-mt-24 bb-row">
+    <button id="btnResetStats" class="bb-btn bb-btn-danger" type="button">RESET STATS</button>
+    <a class="bb-btn bb-btn-ghost" href="/configure">BACK</a>
+  </div>
+</div>
+
+{% block scripts %}
+<script defer src="{{ url_for('static', filename='js/stats.js') }}"></script>
+{% endblock %}
+{% endblock %}

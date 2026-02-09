@@ -1,0 +1,41 @@
+{% extends "layout.html" %}
+{% block content %}
+
+<div class="bb-panel">
+  <div class="bb-kicker bb-led bb-flicker">&gt;&gt; OPERATOR ACCESS GRANTED</div>
+  <div class="bb-kicker bb-danger bb-flicker" style="margin-top:6px;">&gt;&gt; SYSTEM RESPONDING...</div>
+
+  <div class="bb-divider"></div>
+
+  <div class="bb-row" style="justify-content:space-between;">
+    <div id="statusText" class="bb-kicker">STATE: ONGOING</div>
+    <div id="metaText" class="bb-kicker">DEPTH: - | SCORE: -</div>
+  </div>
+
+  <div class="bb-board-wrap">
+    <div id="board" class="bb-board" aria-label="Tactix board" data-size="3">
+      <svg class="bb-winline" id="winline" viewBox="0 0 100 100" preserveAspectRatio="none">
+        <line x1="10" y1="10" x2="90" y2="90"></line>
+      </svg>
+    </div>
+  </div>
+
+  <div class="bb-side-stack bb-mt-16">
+    <div class="bb-actions">
+      <button id="btnScan" class="bb-btn bb-btn-primary" type="button">EXPLOIT SCAN</button>
+      <button id="btnUndo" class="bb-btn" type="button">FIREWALL LOCK</button>
+      <button id="btnReset" class="bb-btn bb-btn-danger" type="button">RESET SYSTEM</button>
+      <a class="bb-btn bb-btn-ghost" href="/stats">BREACH REPORT</a>
+    </div>
+
+    <div class="bb-frame">
+      <div class="bb-kicker">TERMINAL</div>
+      <div id="terminalLog" style="margin-top:10px;display:flex;flex-direction:column;gap:8px;"></div>
+    </div>
+  </div>
+</div>
+
+{% block scripts %}
+<script defer src="{{ url_for('static', filename='js/game.js') }}"></script>
+{% endblock %}
+{% endblock %}

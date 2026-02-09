@@ -1,0 +1,13 @@
+{# templates/partials/neon_card.html #}
+<div class="bb-panel bb-panel-sm {{ class_name|default('') }}">
+  {% if title %}
+    <div class="bb-kicker">{{ title }}</div>
+    <div class="bb-divider"></div>
+  {% endif %}
+  <div>
+    {{ body|safe }}
+    {% if content %}
+      {{ content|safe }}
+    {% endif %}
+  </div>
+</div>

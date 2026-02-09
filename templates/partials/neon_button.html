@@ -1,0 +1,25 @@
+{# templates/partials/neon_button.html #}
+{% set href = href|default(None) %}
+{% set variant = variant|default("primary") %}
+{% set size = size|default("md") %}
+{% set label = label|default("BUTTON") %}
+{% set icon = icon|default("") %}
+
+{% set cls = "bb-btn" %}
+{% if variant == "primary" %}{% set cls = cls + " bb-btn-primary" %}{% endif %}
+{% if variant == "danger" %}{% set cls = cls + " bb-btn-danger" %}{% endif %}
+{% if variant == "ghost" %}{% set cls = cls + " bb-btn-ghost" %}{% endif %}
+
+{% if size == "lg" %}{% set cls = cls + " bb-sweep" %}{% endif %}
+
+{% if href %}
+<a href="{{ href }}" class="{{ cls }}">
+  {% if icon %}<span aria-hidden="true">{{ icon }}</span>{% endif %}
+  <span>{{ label }}</span>
+</a>
+{% else %}
+<button type="{{ type|default('button') }}" class="{{ cls }}">
+  {% if icon %}<span aria-hidden="true">{{ icon }}</span>{% endif %}
+  <span>{{ label }}</span>
+</button>
+{% endif %}

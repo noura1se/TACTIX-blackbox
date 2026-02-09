@@ -1,0 +1,8 @@
+{# templates/partials/terminal_line.html #}
+<div class="bb-terminal-line">
+  <span class="bb-led">SYSTEM:</span>
+  <span style="margin-left:8px;color:rgba(219,230,255,.9);">{{ text|default("...") }}</span>
+  {% if blink %}
+    <span class="bb-pulseglow" aria-hidden="true" style="margin-left:6px;color:rgba(111,227,255,.95);">▌</span>
+  {% endif %}
+</div>
