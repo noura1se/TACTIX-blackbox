@@ -1,49 +1,80 @@
 {% extends "layout.html" %}
+
 {% block content %}
+<div class="configure-container">
+    <div class="neon-card">
+        <div class="neon-card-header">
+            <h2>Configure protocol.</h2>
+        </div>
+        <div class="neon-card-body">
+            <form id="configure-form">
+                <div class="form-group">
+                    <label class="form-label">GRID SIZE</label>
+                    <div class="radio-group">
+                        <label class="radio-label">
+                            <input type="radio" name="grid_size" value="3" checked>
+                            <span class="radio-custom"></span>
+                            3 x 3
+                        </label>
+                        <label class="radio-label">
+                            <input type="radio" name="grid_size" value="4">
+                            <span class="radio-custom"></span>
+                            4 x 4
+                        </label>
+                        <label class="radio-label">
+                            <input type="radio" name="grid_size" value="5">
+                            <span class="radio-custom"></span>
+                            5 x 5
+                        </label>
+                    </div>
+                </div>
 
-<div class="bb-panel bb-config">
-  <div class="bb-kicker">TACTIX // BLACKBOX</div>
-  <div class="bb-h1">CONFIGURE</div>
-  <div class="bb-sub">Configure protocol.</div>
+                <div class="form-group">
+                    <label class="form-label">MODE</label>
+                    <div class="radio-group">
+                        <label class="radio-label">
+                            <input type="radio" name="mode" value="OPERATOR vs SYSTEM" checked>
+                            <span class="radio-custom"></span>
+                            OPERATOR vs SYSTEM
+                        </label>
+                        <label class="radio-label">
+                            <input type="radio" name="mode" value="OPERATOR vs OPERATOR">
+                            <span class="radio-custom"></span>
+                            OPERATOR vs OPERATOR
+                        </label>
+                    </div>
+                </div>
 
-  <div class="bb-divider"></div>
+                <div class="form-group">
+                    <label class="form-label">DIFFICULTY</label>
+                    <div class="radio-group">
+                        <label class="radio-label">
+                            <input type="radio" name="difficulty" value="EASY" checked>
+                            <span class="radio-custom"></span>
+                            EASY
+                        </label>
+                        <label class="radio-label">
+                            <input type="radio" name="difficulty" value="MEDIUM">
+                            <span class="radio-custom"></span>
+                            MEDIUM
+                        </label>
+                        <label class="radio-label">
+                            <input type="radio" name="difficulty" value="RELENTLESS">
+                            <span class="radio-custom"></span>
+                            RELENTLESS
+                        </label>
+                    </div>
+                </div>
 
-  <div class="bb-block">
-    <div class="bb-block-title">&lt; GRID SIZE &gt;</div>
-    <div id="gridSize" class="bb-pill-group">
-      <button class="bb-pill is-active" type="button" data-board-size="3">3×3</button>
-      <button class="bb-pill" type="button" data-board-size="4">4×4</button>
-      <button class="bb-pill" type="button" data-board-size="5">5×5</button>
+                <button type="submit" class="neon-button primary">
+                    <i class="fas fa-bolt"></i> INITIATE BREACH
+                </button>
+            </form>
+        </div>
     </div>
-  </div>
-
-  <div class="bb-block">
-    <div class="bb-block-title">&lt; MODE &gt;</div>
-    <div id="mode" class="bb-pill-group" style="flex-direction:column;align-items:stretch;">
-      <button class="bb-pill is-active" type="button" data-mode="HUMAN_VS_AI">OPERATOR vs SYSTEM</button>
-      <button class="bb-pill" type="button" data-mode="HUMAN_VS_HUMAN">OPERATOR vs OPERATOR</button>
-    </div>
-  </div>
-
-  <div class="bb-block">
-    <div class="bb-block-title">&lt; DIFFICULTY &gt;</div>
-    <div id="difficulty" class="bb-pill-group">
-      <button class="bb-pill cyan is-active" type="button" data-difficulty="EASY">EASY</button>
-      <button class="bb-pill vio" type="button" data-difficulty="MEDIUM">MEDIUM</button>
-      <button class="bb-pill red" type="button" data-difficulty="RELENTLESS">RELENTLESS</button>
-    </div>
-  </div>
-
-  <div class="bb-mt-24">
-    <button id="btnStart" class="bb-btn bb-btn-primary bb-sweep" type="button">INITIATE BREACH</button>
-  </div>
-
-  <div class="bb-mt-16 bb-kicker" style="opacity:.9;">
-    Config is stored locally for this session.
-  </div>
 </div>
+{% endblock %}
 
 {% block scripts %}
-<script defer src="{{ url_for('static', filename='js/configure.js') }}"></script>
-{% endblock %}
+<script src="{{ url_for('static', filename='js/configure.js') }}"></script>
 {% endblock %}

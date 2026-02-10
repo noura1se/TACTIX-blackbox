@@ -1,44 +1,42 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>{% block title %}TACTIX // BLACKBOX{% endblock %}</title>
-
-  <link rel="stylesheet" href="{{ url_for('static', filename='css/blackbox.css') }}">
-  <link rel="stylesheet" href="{{ url_for('static', filename='css/animations.css') }}">
-  <script defer src="{{ url_for('static', filename='js/ui.js') }}"></script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TACTIX // BLACKBOX</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/blackbox.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/animations.css') }}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 </head>
-
-<body class="bb-grid-bg bb-noise">
-  <div class="bb-shell">
-    <header class="bb-topbar">
-      <div class="bb-topbar-inner">
-        <div class="bb-brand">
-          <div class="title">TACTIX<span class="slash"> //</span> BLACKBOX</div>
-          <div class="muted">BLACKBOX INTERFACE</div>
+<body>
+    <div class="background-grid"></div>
+    <div class="topbar">
+        <div class="topbar-left">
+            <h1 class="logo">TACTIX // <span class="logo-accent">BLACKBOX</span></h1>
         </div>
+        <div class="topbar-right">
+            <nav class="nav-links">
+                <a href="{{ url_for('home') }}" class="nav-link {% if request.endpoint == 'home' %}active{% endif %}">
+                    <i class="fas fa-home"></i> Lobby
+                </a>
+                <a href="{{ url_for('configure') }}" class="nav-link {% if request.endpoint == 'configure' %}active{% endif %}">
+                    <i class="fas fa-cog"></i> Configure
+                </a>
+                <a href="{{ url_for('game') }}" class="nav-link {% if request.endpoint == 'game' %}active{% endif %}">
+                    <i class="fas fa-gamepad"></i> Game
+                </a>
+                <a href="{{ url_for('stats') }}" class="nav-link {% if request.endpoint == 'stats' %}active{% endif %}">
+                    <i class="fas fa-chart-bar"></i> Statistics
+                </a>
+            </nav>
+        </div>
+    </div>
 
-        <nav class="bb-nav">
-          <a href="/configure">CONFIGURE</a>
-          <a href="/game">GAME</a>
-          <a href="/stats">STATS</a>
-        </nav>
-      </div>
-    </header>
-
-    <main class="bb-main">
-      {% block content %}{% endblock %}
+    <main class="main-content">
+        {% block content %}{% endblock %}
     </main>
 
-    <footer class="bb-topbar" style="position:static;border-top:1px solid rgba(160,200,255,.10);border-bottom:none;">
-      <div class="bb-topbar-inner" style="opacity:.9;">
-        <div class="bb-kicker">SYSTEM STATUS: <span class="bb-led">ONLINE</span></div>
-        <div class="bb-kicker">BUILD: <span class="bb-led">NEON-UI v1</span></div>
-      </div>
-    </footer>
-
+    <script src="{{ url_for('static', filename='js/ui.js') }}"></script>
     {% block scripts %}{% endblock %}
-  </div>
 </body>
 </html>

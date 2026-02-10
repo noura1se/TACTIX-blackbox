@@ -1,41 +1,54 @@
 {% extends "layout.html" %}
+
 {% block content %}
-
-<div class="bb-panel">
-  <div class="bb-kicker bb-led bb-flicker">&gt;&gt; OPERATOR ACCESS GRANTED</div>
-  <div class="bb-kicker bb-danger bb-flicker" style="margin-top:6px;">&gt;&gt; SYSTEM RESPONDING...</div>
-
-  <div class="bb-divider"></div>
-
-  <div class="bb-row" style="justify-content:space-between;">
-    <div id="statusText" class="bb-kicker">STATE: ONGOING</div>
-    <div id="metaText" class="bb-kicker">DEPTH: - | SCORE: -</div>
-  </div>
-
-  <div class="bb-board-wrap">
-    <div id="board" class="bb-board" aria-label="Tactix board" data-size="3">
-      <svg class="bb-winline" id="winline" viewBox="0 0 100 100" preserveAspectRatio="none">
-        <line x1="10" y1="10" x2="90" y2="90"></line>
-      </svg>
-    </div>
-  </div>
-
-  <div class="bb-side-stack bb-mt-16">
-    <div class="bb-actions">
-      <button id="btnScan" class="bb-btn bb-btn-primary" type="button">EXPLOIT SCAN</button>
-      <button id="btnUndo" class="bb-btn" type="button">FIREWALL LOCK</button>
-      <button id="btnReset" class="bb-btn bb-btn-danger" type="button">RESET SYSTEM</button>
-      <a class="bb-btn bb-btn-ghost" href="/stats">BREACH REPORT</a>
+<div class="game-container">
+    <div class="game-left">
+        <div class="neon-card">
+            <div class="neon-card-header">
+                <h2>OPERATOR <span class="vs">VS</span> SYSTEM</h2>
+            </div>
+            <div class="neon-card-body">
+                <div id="game-board" class="game-board">
+                    <!-- Le plateau de jeu sera généré par JavaScript -->
+                </div>
+            </div>
+        </div>
     </div>
 
-    <div class="bb-frame">
-      <div class="bb-kicker">TERMINAL</div>
-      <div id="terminalLog" style="margin-top:10px;display:flex;flex-direction:column;gap:8px;"></div>
+    <div class="game-right">
+        <div class="neon-card">
+            <div class="neon-card-header">
+                <h2>BREACH CONTROLS</h2>
+            </div>
+            <div class="neon-card-body">
+                <div class="button-group-vertical">
+                    <button id="exploit-scan" class="neon-button primary">
+                        <i class="fas fa-search"></i> EXPLOIT SCAN
+                    </button>
+                    <button id="firewall-lock" class="neon-button primary">
+                        <i class="fas fa-shield-alt"></i> FIREWALL LOCK
+                    </button>
+                    <button id="reset-game" class="neon-button danger">
+                        <i class="fas fa-redo"></i> RESET GRID
+                    </button>
+                    <button id="undo-move" class="neon-button ghost">
+                        <i class="fas fa-undo"></i> UNDO MOVE
+                    </button>
+                </div>
+
+                <div class="status-indicators">
+                    <div class="status-item">
+                        <span class="status-label">GREALL SPJECT</span>
+                        <span class="status-value">ACTIVE</span>
+                    </div>
+                    <!-- Ajoutez d'autres indicateurs si nécessaire -->
+                </div>
+            </div>
+        </div>
     </div>
-  </div>
 </div>
+{% endblock %}
 
 {% block scripts %}
-<script defer src="{{ url_for('static', filename='js/game.js') }}"></script>
-{% endblock %}
+<script src="{{ url_for('static', filename='js/game.js') }}"></script>
 {% endblock %}
