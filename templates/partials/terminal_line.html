@@ -1,0 +1,215 @@
+{% macro terminal_line(
+    prefix='$',
+    text='',
+    type='info',
+    timestamp=false,
+    animate=false,
+    color=''
+) %}
+
+{# Type-based styling #}
+{% set type_styles = {
+    'info': {
+        'prefix_color': 'text-neon-cyan',
+        'text_color': 'text-gray-300',
+        'symbol': '>',
+        'glow': 'text-shadow-neon-cyan'
+    },
+    'success': {
+        'prefix_color': 'text-neon-green',
+        'text_color': 'text-gray-300',
+        'symbol': '✓',
+        'glow': 'text-shadow-neon-green'
+    },
+    'warning': {
+        'prefix_color': 'text-yellow-400',
+        'text_color': 'text-gray-300',
+        'symbol': '⚠',
+        'glow': 'text-shadow-yellow'
+    },
+    'error': {
+        'prefix_color': 'text-breach-red',
+        'text_color': 'text-gray-300',
+        'symbol': '✖',
+        'glow': 'text-shadow-breach'
+    },
+    'system': {
+        'prefix_color': 'text-neon-purple',
+        'text_color': 'text-gray-400',
+        'symbol': '◆',
+        'glow': 'text-shadow-neon-purple'
+    },
+    'breach': {
+        'prefix_color': 'text-breach-red',
+        'text_color': 'text-breach-red',
+        'symbol': '>>',
+        'glow': 'text-shadow-breach'
+    }
+} %}
+
+{% set style = type_styles.get(type, type_styles['info']) %}
+{% set prefix_symbol = prefix if prefix != '$' else style.symbol %}
+
+<div class="terminal-line font-mono text-sm flex items-start gap-3 py-1 
+            {% if animate %}terminal-animate{% endif %}"
+     data-line-type="{{ type }}">
+    
+    <!-- Timestamp (optional) -->
+    {% if timestamp %}
+    <span class="text-gray-600 text-xs shrink-0">
+        [{{ timestamp }}]
+    </span>
+    {% endif %}
+    
+    <!-- Prefix/Symbol -->
+    <span class="terminal-prefix {{ style.prefix_color }} {{ style.glow }} font-bold shrink-0 select-none">
+        {{ prefix_symbol }}
+    </span>
+    
+    <!-- Text Content -->
+    <span class="terminal-text {{ style.text_color }} {% if color %}{{ color }}{% endif %} flex-1">
+        {{ text | safe }}
+    </span>
+    
+    <!-- Cursor (for animated lines) -->
+    {% if animate %}
+    <span class="terminal-cursor {{ style.prefix_color }} animate-terminal-blink">█</span>
+    {% endif %}
+</div>
+
+<style>
+    .terminal-line {
+        position: relative;
+        line-height: 1.6;
+    }
+    
+    /* Typing animation */
+    .terminal-animate .terminal-text {
+        overflow: hidden;
+        border-right: 2px solid currentColor;
+        white-space: nowrap;
+        animation: typing 1.5s steps(40, end), blink-caret 0.75s step-end infinite;
+    }
+    
+    @keyframes typing {
+        from { width: 0; max-width: 0; }
+        to { width: 100%; max-width: 100%; }
+    }
+    
+    @keyframes blink-caret {
+        from, to { border-color: transparent; }
+        50% { border-color: currentColor; }
+    }
+    
+    /* Glow effects */
+    .text-shadow-neon-cyan {
+        text-shadow: 0 0 10px #00f6ff;
+    }
+    
+    .text-shadow-neon-green {
+        text-shadow: 0 0 10px #00ff9f;
+    }
+    
+    .text-shadow-neon-purple {
+        text-shadow: 0 0 10px #b833ff;
+    }
+    
+    .text-shadow-breach {
+        text-shadow: 0 0 10px #ff3366;
+    }
+    
+    .text-shadow-yellow {
+        text-shadow: 0 0 10px #fbbf24;
+    }
+    
+    /* Hover effect */
+    .terminal-line:hover {
+        background: rgba(255, 255, 255, 0.02);
+    }
+</style>
+
+{% endmacro %}
+
+
+{# Terminal Block - Container for multiple lines #}
+{% macro terminal_block(title='SYSTEM LOG', max_height='400px', scrollable=true) %}
+
+<div class="terminal-block border border-neon-cyan/30 bg-void-dark/80 backdrop-blur-sm overflow-hidden">
+    <!-- Terminal Header -->
+    <div class="terminal-header bg-grid-line/50 px-4 py-2 flex items-center justify-between border-b border-neon-cyan/20">
+        <div class="flex items-center gap-3">
+            <!-- Window Controls -->
+            <div class="flex gap-2">
+                <div class="w-3 h-3 rounded-full bg-breach-red/50 border border-breach-red"></div>
+                <div class="w-3 h-3 rounded-full bg-yellow-500/50 border border-yellow-500"></div>
+                <div class="w-3 h-3 rounded-full bg-neon-green/50 border border-neon-green"></div>
+            </div>
+            
+            <!-- Title -->
+            <span class="font-mono text-xs text-neon-cyan uppercase tracking-wider">
+                {{ title }}
+            </span>
+        </div>
+        
+        <!-- Status Indicator -->
+        <div class="flex items-center gap-2">
+            <div class="w-2 h-2 rounded-full bg-neon-green animate-pulse"></div>
+            <span class="font-mono text-xs text-gray-500 uppercase">ACTIVE</span>
+        </div>
+    </div>
+    
+    <!-- Terminal Content -->
+    <div class="terminal-content p-4 {% if scrollable %}overflow-y-auto{% endif %}"
+         {% if max_height %}style="max-height: {{ max_height }};"{% endif %}>
+        {{ caller() }}
+    </div>
+</div>
+
+<style>
+    .terminal-block {
+        font-family: 'Share Tech Mono', monospace;
+    }
+    
+    /* Custom scrollbar for terminal */
+    .terminal-content::-webkit-scrollbar {
+        width: 6px;
+    }
+    
+    .terminal-content::-webkit-scrollbar-track {
+        background: rgba(0, 0, 0, 0.3);
+    }
+    
+    .terminal-content::-webkit-scrollbar-thumb {
+        background: rgba(0, 246, 255, 0.3);
+        border-radius: 3px;
+    }
+    
+    .terminal-content::-webkit-scrollbar-thumb:hover {
+        background: rgba(0, 246, 255, 0.5);
+    }
+</style>
+
+{% endmacro %}
+
+
+{# Quick helper macros for common terminal messages #}
+
+{% macro info_line(text, timestamp='') %}
+    {{ terminal_line(type='info', text=text, timestamp=timestamp) }}
+{% endmacro %}
+
+{% macro success_line(text, timestamp='') %}
+    {{ terminal_line(type='success', text=text, timestamp=timestamp) }}
+{% endmacro %}
+
+{% macro error_line(text, timestamp='') %}
+    {{ terminal_line(type='error', text=text, timestamp=timestamp) }}
+{% endmacro %}
+
+{% macro breach_line(text, animate=true) %}
+    {{ terminal_line(type='breach', text=text, animate=animate) }}
+{% endmacro %}
+
+{% macro system_line(text, timestamp='') %}
+    {{ terminal_line(type='system', text=text, timestamp=timestamp) }}
+{% endmacro %}

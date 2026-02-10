@@ -1,80 +1,358 @@
 {% extends "layout.html" %}
+{% from "partials/neon_card.html" import neon_card, info_card %}
+{% from "partials/neon_button.html" import neon_button, primary_button, ghost_button %}
+{% from "partials/terminal_line.html" import terminal_block, info_line, system_line %}
 
-{% block content %}
-<div class="configure-container">
-    <div class="neon-card">
-        <div class="neon-card-header">
-            <h2>Configure protocol.</h2>
-        </div>
-        <div class="neon-card-body">
-            <form id="configure-form">
-                <div class="form-group">
-                    <label class="form-label">GRID SIZE</label>
-                    <div class="radio-group">
-                        <label class="radio-label">
-                            <input type="radio" name="grid_size" value="3" checked>
-                            <span class="radio-custom"></span>
-                            3 x 3
-                        </label>
-                        <label class="radio-label">
-                            <input type="radio" name="grid_size" value="4">
-                            <span class="radio-custom"></span>
-                            4 x 4
-                        </label>
-                        <label class="radio-label">
-                            <input type="radio" name="grid_size" value="5">
-                            <span class="radio-custom"></span>
-                            5 x 5
-                        </label>
-                    </div>
-                </div>
+{% block title %}Configure Breach - TACTIX // BLACKBOX{% endblock %}
 
-                <div class="form-group">
-                    <label class="form-label">MODE</label>
-                    <div class="radio-group">
-                        <label class="radio-label">
-                            <input type="radio" name="mode" value="OPERATOR vs SYSTEM" checked>
-                            <span class="radio-custom"></span>
-                            OPERATOR vs SYSTEM
-                        </label>
-                        <label class="radio-label">
-                            <input type="radio" name="mode" value="OPERATOR vs OPERATOR">
-                            <span class="radio-custom"></span>
-                            OPERATOR vs OPERATOR
-                        </label>
-                    </div>
-                </div>
-
-                <div class="form-group">
-                    <label class="form-label">DIFFICULTY</label>
-                    <div class="radio-group">
-                        <label class="radio-label">
-                            <input type="radio" name="difficulty" value="EASY" checked>
-                            <span class="radio-custom"></span>
-                            EASY
-                        </label>
-                        <label class="radio-label">
-                            <input type="radio" name="difficulty" value="MEDIUM">
-                            <span class="radio-custom"></span>
-                            MEDIUM
-                        </label>
-                        <label class="radio-label">
-                            <input type="radio" name="difficulty" value="RELENTLESS">
-                            <span class="radio-custom"></span>
-                            RELENTLESS
-                        </label>
-                    </div>
-                </div>
-
-                <button type="submit" class="neon-button primary">
-                    <i class="fas fa-bolt"></i> INITIATE BREACH
-                </button>
-            </form>
-        </div>
-    </div>
-</div>
+{% block extra_head %}
+<style>
+    /* Grid Size Preview */
+    .grid-preview {
+        display: grid;
+        gap: 2px;
+        max-width: 150px;
+        margin: 0 auto;
+        padding: 1rem;
+        background: rgba(0, 0, 0, 0.3);
+        border: 1px solid rgba(0, 246, 255, 0.2);
+    }
+    
+    .grid-preview.size-3 {
+        grid-template-columns: repeat(3, 1fr);
+    }
+    
+    .grid-preview.size-4 {
+        grid-template-columns: repeat(4, 1fr);
+    }
+    
+    .grid-preview.size-5 {
+        grid-template-columns: repeat(5, 1fr);
+    }
+    
+    .grid-preview-cell {
+        aspect-ratio: 1;
+        background: rgba(0, 246, 255, 0.1);
+        border: 1px solid rgba(0, 246, 255, 0.3);
+    }
+    
+    /* Selection Cards */
+    .selection-card {
+        cursor: pointer;
+        transition: all 0.3s ease;
+        border: 2px solid transparent;
+    }
+    
+    .selection-card:hover {
+        transform: translateY(-4px);
+        border-color: rgba(0, 246, 255, 0.5);
+    }
+    
+    .selection-card.selected {
+        border-color: #00f6ff;
+        box-shadow: 0 0 30px rgba(0, 246, 255, 0.4);
+        background: rgba(0, 246, 255, 0.1);
+    }
+    
+    /* Custom Radio */
+    .custom-radio {
+        display: none;
+    }
+    
+    .custom-radio-label {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        padding: 1rem;
+        border: 1px solid rgba(0, 246, 255, 0.2);
+        background: rgba(0, 0, 0, 0.3);
+        cursor: pointer;
+        transition: all 0.3s ease;
+    }
+    
+    .custom-radio:checked + .custom-radio-label {
+        border-color: #00f6ff;
+        background: rgba(0, 246, 255, 0.1);
+        box-shadow: 0 0 15px rgba(0, 246, 255, 0.3);
+    }
+    
+    .custom-radio-indicator {
+        width: 20px;
+        height: 20px;
+        border: 2px solid rgba(0, 246, 255, 0.5);
+        border-radius: 50%;
+        position: relative;
+    }
+    
+    .custom-radio:checked + .custom-radio-label .custom-radio-indicator::after {
+        content: '';
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        width: 10px;
+        height: 10px;
+        background: #00f6ff;
+        border-radius: 50%;
+        box-shadow: 0 0 10px #00f6ff;
+    }
+</style>
 {% endblock %}
 
-{% block scripts %}
+{% block content %}
+
+<div class="container mx-auto px-6 py-8 max-w-6xl">
+    
+    <!-- Page Header -->
+    <div class="text-center mb-12 animate-fadeInDown">
+        <h1 class="font-display font-black text-5xl mb-4">
+            <span class="text-neon-cyan animate-flicker">BREACH</span>
+            <span class="text-gray-600 mx-2">//</span>
+            <span class="text-neon-purple">CONFIGURATION</span>
+        </h1>
+        <p class="font-mono text-gray-400 uppercase tracking-widest text-sm">
+            <span class="text-neon-cyan">◆</span> Initialize Combat Parameters <span class="text-neon-cyan">◆</span>
+        </p>
+    </div>
+    
+    <!-- Configuration Form -->
+    <form id="configForm" class="space-y-8">
+        
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            
+            <!-- Left Column: Grid & Mode Selection -->
+            <div class="lg:col-span-2 space-y-8">
+                
+                <!-- Grid Size Selection -->
+                {% call neon_card(
+                    title='GRID MATRIX',
+                    subtitle='Select Battlefield Dimensions',
+                    color='cyan',
+                    glow=true,
+                    scanline=true,
+                    class='animate-fadeInUp'
+                ) %}
+                    <div class="grid grid-cols-3 gap-4" id="gridSizeSelector">
+                        
+                        <!-- 3x3 -->
+                        <div class="selection-card text-center p-6 bg-void-dark/50 border-2" 
+                             data-size="3"
+                             onclick="selectGridSize(3)">
+                            <div class="grid-preview size-3 mb-4">
+                                {% for i in range(9) %}
+                                <div class="grid-preview-cell"></div>
+                                {% endfor %}
+                            </div>
+                            <h3 class="font-display font-bold text-xl text-neon-cyan mb-2">3×3</h3>
+                            <p class="font-mono text-xs text-gray-500 uppercase">BLITZ MODE</p>
+                            <p class="text-xs text-gray-600 mt-2">Fast-paced tactical combat</p>
+                        </div>
+                        
+                        <!-- 4x4 -->
+                        <div class="selection-card text-center p-6 bg-void-dark/50 border-2" 
+                             data-size="4"
+                             onclick="selectGridSize(4)">
+                            <div class="grid-preview size-4 mb-4">
+                                {% for i in range(16) %}
+                                <div class="grid-preview-cell"></div>
+                                {% endfor %}
+                            </div>
+                            <h3 class="font-display font-bold text-xl text-neon-purple mb-2">4×4</h3>
+                            <p class="font-mono text-xs text-gray-500 uppercase">TACTICAL MODE</p>
+                            <p class="text-xs text-gray-600 mt-2">Balanced strategic depth</p>
+                        </div>
+                        
+                        <!-- 5x5 -->
+                        <div class="selection-card text-center p-6 bg-void-dark/50 border-2" 
+                             data-size="5"
+                             onclick="selectGridSize(5)">
+                            <div class="grid-preview size-5 mb-4">
+                                {% for i in range(25) %}
+                                <div class="grid-preview-cell"></div>
+                                {% endfor %}
+                            </div>
+                            <h3 class="font-display font-bold text-xl text-neon-pink mb-2">5×5</h3>
+                            <p class="font-mono text-xs text-gray-500 uppercase">STRATEGIC MODE</p>
+                            <p class="text-xs text-gray-600 mt-2">Maximum complexity</p>
+                        </div>
+                        
+                    </div>
+                    
+                    <input type="hidden" name="board_size" id="boardSize" value="3">
+                {% endcall %}
+                
+                <!-- Game Mode Selection -->
+                {% call neon_card(
+                    title='COMBAT PROTOCOL',
+                    subtitle='Select Engagement Mode',
+                    color='purple',
+                    glow=true,
+                    scanline=false,
+                    class='animate-fadeInUp animate-delay-100'
+                ) %}
+                    <div class="space-y-3" id="gameModeSelector">
+                        
+                        <!-- Operator vs AI -->
+                        <input type="radio" name="game_mode" id="mode_ai" value="operator_vs_ai" class="custom-radio" checked>
+                        <label for="mode_ai" class="custom-radio-label">
+                            <div class="custom-radio-indicator"></div>
+                            <div class="flex-1">
+                                <div class="flex items-center justify-between mb-1">
+                                    <span class="font-display font-bold text-neon-cyan uppercase">Operator vs AI</span>
+                                    <span class="badge cyan text-xs">RECOMMENDED</span>
+                                </div>
+                                <p class="text-sm text-gray-400">Battle against adaptive neural opponent</p>
+                            </div>
+                        </label>
+                        
+                        <!-- Operator vs Operator -->
+                        <input type="radio" name="game_mode" id="mode_pvp" value="operator_vs_operator" class="custom-radio">
+                        <label for="mode_pvp" class="custom-radio-label">
+                            <div class="custom-radio-indicator"></div>
+                            <div class="flex-1">
+                                <div class="flex items-center justify-between mb-1">
+                                    <span class="font-display font-bold text-neon-purple uppercase">Operator vs Operator</span>
+                                    <span class="badge purple text-xs">LOCAL</span>
+                                </div>
+                                <p class="text-sm text-gray-400">Head-to-head tactical warfare</p>
+                            </div>
+                        </label>
+                        
+                    </div>
+                {% endcall %}
+                
+                <!-- AI Difficulty (shown only for AI mode) -->
+                <div id="aiDifficultySection" class="animate-fadeInUp animate-delay-200">
+                    {% call neon_card(
+                        title='NEURAL OPPONENT',
+                        subtitle='Select AI Difficulty',
+                        color='green',
+                        glow=true,
+                        scanline=false
+                    ) %}
+                        <div class="space-y-3">
+                            
+                            <!-- Easy -->
+                            <input type="radio" name="ai_difficulty" id="diff_easy" value="easy" class="custom-radio" checked>
+                            <label for="diff_easy" class="custom-radio-label">
+                                <div class="custom-radio-indicator"></div>
+                                <div class="flex-1">
+                                    <div class="flex items-center gap-3 mb-1">
+                                        <div class="w-3 h-3 rounded-full bg-neon-green"></div>
+                                        <span class="font-display font-bold text-neon-green uppercase">Easy</span>
+                                        <span class="text-xs text-gray-600">Training Mode</span>
+                                    </div>
+                                    <p class="text-sm text-gray-400">Basic AI - Makes random moves, good for learning</p>
+                                </div>
+                            </label>
+                            
+                            <!-- Medium -->
+                            <input type="radio" name="ai_difficulty" id="diff_medium" value="medium" class="custom-radio">
+                            <label for="diff_medium" class="custom-radio-label">
+                                <div class="custom-radio-indicator"></div>
+                                <div class="flex-1">
+                                    <div class="flex items-center gap-3 mb-1">
+                                        <div class="w-3 h-3 rounded-full bg-yellow-400"></div>
+                                        <span class="font-display font-bold text-yellow-400 uppercase">Medium</span>
+                                        <span class="text-xs text-gray-600">Tactical Challenge</span>
+                                    </div>
+                                    <p class="text-sm text-gray-400">Minimax AI depth 3 - Balanced tactical opponent</p>
+                                </div>
+                            </label>
+                            
+                            <!-- Relentless -->
+                            <input type="radio" name="ai_difficulty" id="diff_relentless" value="relentless" class="custom-radio">
+                            <label for="diff_relentless" class="custom-radio-label">
+                                <div class="custom-radio-indicator"></div>
+                                <div class="flex-1">
+                                    <div class="flex items-center gap-3 mb-1">
+                                        <div class="w-3 h-3 rounded-full bg-breach-red animate-pulse"></div>
+                                        <span class="font-display font-bold text-breach-red uppercase">Relentless</span>
+                                        <span class="text-xs text-gray-600">Neural Supremacy</span>
+                                    </div>
+                                    <p class="text-sm text-gray-400">Maximum depth minimax - Nearly unbeatable AI</p>
+                                </div>
+                            </label>
+                            
+                        </div>
+                    {% endcall %}
+                </div>
+                
+            </div>
+            
+            <!-- Right Column: Summary & Actions -->
+            <div class="space-y-6">
+                
+                <!-- Configuration Summary -->
+                {% call neon_card(
+                    title='BREACH SUMMARY',
+                    subtitle='Current Configuration',
+                    color='cyan',
+                    glow=true,
+                    scanline=true,
+                    class='sticky top-6 animate-fadeInRight'
+                ) %}
+                    <div class="space-y-4" id="configSummary">
+                        
+                        <div class="stat-item">
+                            <span class="stat-label">Grid Size</span>
+                            <span class="stat-value cyan" id="summaryGridSize">3×3</span>
+                        </div>
+                        
+                        <div class="stat-item">
+                            <span class="stat-label">Game Mode</span>
+                            <span class="stat-value purple" id="summaryGameMode">Operator vs AI</span>
+                        </div>
+                        
+                        <div class="stat-item" id="summaryDifficultyContainer">
+                            <span class="stat-label">AI Difficulty</span>
+                            <span class="stat-value green" id="summaryDifficulty">Easy</span>
+                        </div>
+                        
+                        <div class="stat-item">
+                            <span class="stat-label">Win Condition</span>
+                            <span class="stat-value cyan" id="summaryWinCondition">3 in a row</span>
+                        </div>
+                        
+                    </div>
+                    
+                    <div class="border-t border-neon-cyan/20 pt-4 mt-6">
+                        {{ primary_button(
+                            text='INITIATE BREACH',
+                            type='submit',
+                            full_width=true,
+                            icon='<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>'
+                        ) }}
+                        
+                        <div class="mt-3">
+                            {{ ghost_button(
+                                text='Back to Home',
+                                href='/',
+                                color='purple',
+                                full_width=true
+                            ) }}
+                        </div>
+                    </div>
+                {% endcall %}
+                
+                <!-- System Status -->
+                {% call terminal_block(title='SYSTEM STATUS', max_height='250px') %}
+                    {{ info_line('Configuration interface: ACTIVE') }}
+                    {{ info_line('Grid matrices available: 3×3, 4×4, 5×5') }}
+                    {{ info_line('AI engine: LOADED') }}
+                    {{ system_line('Waiting for operator input...') }}
+                {% endcall %}
+                
+            </div>
+            
+        </div>
+        
+    </form>
+    
+</div>
+
+{% endblock %}
+
+{% block extra_scripts %}
 <script src="{{ url_for('static', filename='js/configure.js') }}"></script>
 {% endblock %}

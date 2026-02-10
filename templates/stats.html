@@ -1,72 +1,104 @@
 {% extends "layout.html" %}
+{% from "partials/neon_card.html" import neon_card %}
+{% from "partials/neon_button.html" import ghost_button %}
+
+{% block title %}Combat Statistics - TACTIX // BLACKBOX{% endblock %}
 
 {% block content %}
-<div class="stats-container">
-    <div class="neon-card">
-        <div class="neon-card-header">
-            <h2>STATISTICS</h2>
-        </div>
-        <div class="neon-card-body">
-            <div class="stats-section">
-                <h3>GLOBAL PROGRESS</h3>
-                <div class="progress-bar">
-                    <div class="progress-fill" id="operator-progress" style="width: 58%;">
-                        <span class="progress-label">OPERATOR DOMINANCE // 58%</span>
-                    </div>
-                    <div class="progress-fill system" id="system-progress" style="width: 42%;">
-                        <span class="progress-label">SYSTEM RESISTANCE // 42%</span>
-                    </div>
-                </div>
-                <p class="total-games">TOTAL GAMES: <span id="total-games">102</span></p>
-            </div>
 
-            <div class="stats-section">
-                <h3>GRID PERFORMANCE</h3>
-                <table class="stats-table">
-                    <thead>
-                        <tr>
-                            <th>GRID</th>
-                            <th>W/L/D</th>
-                            <th>WIN RATE</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr>
-                            <td>3 x 3</td>
-                            <td id="3x3-wld">31 / 5 / 2</td>
-                            <td id="3x3-rate">81%</td>
-                        </tr>
-                        <tr>
-                            <td>4 x 4</td>
-                            <td id="4x4-wld">23 / 15 / 4</td>
-                            <td id="4x4-rate">55%</td>
-                        </tr>
-                        <tr>
-                            <td>5 x 5</td>
-                            <td id="5x5-wld">6 / 14 / 2</td>
-                            <td id="5x5-rate">25%</td>
-                        </tr>
-                    </tbody>
-                </table>
-            </div>
-
-            <div class="stats-section">
-                <h3>BREACH METRICS</h3>
-                <ul class="metrics-list">
-                    <li>UNDETECTED WINS: <span id="undetected-wins">46</span></li>
-                    <li>SUCCESSFUL EXPLOITS: <span id="successful-exploits">19</span></li>
-                    <li>FIREWALL LOCKS: <span id="firewall-locks">16</span></li>
-                </ul>
-            </div>
-
-            <button id="reset-stats" class="neon-button danger">
-                <i class="fas fa-trash-alt"></i> RESET STATS
-            </button>
-        </div>
+<div class="container mx-auto px-6 py-8 max-w-7xl">
+    
+    <div class="text-center mb-12 animate-fadeInDown">
+        <h1 class="font-display font-black text-5xl mb-4">
+            <span class="text-neon-green animate-flicker">COMBAT</span>
+            <span class="text-gray-600 mx-2">//</span>
+            <span class="text-neon-purple">STATISTICS</span>
+        </h1>
+        <p class="font-mono text-gray-400 uppercase tracking-widest text-sm">
+            <span class="text-neon-green">◆</span> Performance Analysis Dashboard <span class="text-neon-green">◆</span>
+        </p>
     </div>
+    
+    <!-- Overview Cards -->
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8 animate-fadeInUp">
+        
+        {% call neon_card(title='TOTAL BREACHES', color='cyan', glow=true) %}
+            <div class="text-center py-4">
+                <div class="text-5xl font-display font-black text-neon-cyan mb-2" id="total-games">0</div>
+                <div class="text-xs text-gray-500 font-mono uppercase">Games Played</div>
+            </div>
+        {% endcall %}
+        
+        {% call neon_card(title='WIN RATE', color='green', glow=true) %}
+            <div class="text-center py-4">
+                <div class="text-5xl font-display font-black text-neon-green mb-2" id="win-rate">0%</div>
+                <div class="text-xs text-gray-500 font-mono uppercase">Success Rate</div>
+            </div>
+        {% endcall %}
+        
+        {% call neon_card(title='AVG MOVES', color='purple', glow=true) %}
+            <div class="text-center py-4">
+                <div class="text-5xl font-display font-black text-neon-purple mb-2" id="avg-moves">0</div>
+                <div class="text-xs text-gray-500 font-mono uppercase">Per Game</div>
+            </div>
+        {% endcall %}
+        
+        {% call neon_card(title='LONGEST STREAK', color='pink', glow=true) %}
+            <div class="text-center py-4">
+                <div class="text-5xl font-display font-black text-neon-pink mb-2" id="win-streak">0</div>
+                <div class="text-xs text-gray-500 font-mono uppercase">Consecutive Wins</div>
+            </div>
+        {% endcall %}
+        
+    </div>
+    
+    <!-- Charts Row -->
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
+        
+        {% call neon_card(title='WIN RATE BY GRID SIZE', subtitle='Performance Analysis', color='cyan', glow=true, scanline=true) %}
+            <div class="h-80" id="grid-size-chart"></div>
+        {% endcall %}
+        
+        {% call neon_card(title='GAME OUTCOMES', subtitle='Wins vs Losses vs Draws', color='purple', glow=true) %}
+            <div class="h-80" id="outcomes-chart"></div>
+        {% endcall %}
+        
+    </div>
+    
+    <!-- Recent Games -->
+    {% call neon_card(title='RECENT BREACHES', subtitle='Latest 10 Games', color='green', glow=true, class='animate-fadeInUp animate-delay-200') %}
+        <div class="overflow-x-auto">
+            <table class="w-full font-mono text-sm">
+                <thead>
+                    <tr class="border-b border-neon-green/20">
+                        <th class="text-left py-3 px-4 text-neon-green uppercase text-xs">Date</th>
+                        <th class="text-left py-3 px-4 text-neon-green uppercase text-xs">Grid</th>
+                        <th class="text-left py-3 px-4 text-neon-green uppercase text-xs">Mode</th>
+                        <th class="text-left py-3 px-4 text-neon-green uppercase text-xs">Difficulty</th>
+                        <th class="text-center py-3 px-4 text-neon-green uppercase text-xs">Moves</th>
+                        <th class="text-center py-3 px-4 text-neon-green uppercase text-xs">Result</th>
+                    </tr>
+                </thead>
+                <tbody id="recent-games-table">
+                    <tr>
+                        <td colspan="6" class="text-center py-8 text-gray-500">No games played yet</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    {% endcall %}
+    
+    <!-- Actions -->
+    <div class="flex justify-center gap-4 mt-8">
+        {{ ghost_button(text='New Breach', href='/configure', color='cyan') }}
+        {{ ghost_button(text='Back to Home', href='/', color='purple') }}
+    </div>
+    
 </div>
+
 {% endblock %}
 
-{% block scripts %}
+{% block extra_scripts %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 <script src="{{ url_for('static', filename='js/stats.js') }}"></script>
 {% endblock %}

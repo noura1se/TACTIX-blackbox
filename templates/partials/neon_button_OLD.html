@@ -206,54 +206,46 @@
 
 {# Quick variant macros #}
 
-{% macro primary_button(text, href='', onclick='', icon='', type='button', full_width=false) %}
+{% macro primary_button(text, href='', onclick='', icon='') %}
     {{ neon_button(
         text=text,
-        type=type,
         color='cyan',
         size='lg',
         href=href,
         onclick=onclick,
-        icon=icon,
-        full_width=full_width
+        icon=icon
     ) }}
 {% endmacro %}
 
-{% macro danger_button(text, href='', onclick='', icon='', type='button', full_width=false) %}
+{% macro danger_button(text, href='', onclick='', icon='') %}
     {{ neon_button(
         text=text,
-        type=type,
         color='red',
         size='md',
         href=href,
         onclick=onclick,
-        icon=icon,
-        full_width=full_width
+        icon=icon
     ) }}
 {% endmacro %}
 
-{% macro success_button(text, href='', onclick='', icon='', type='button', full_width=false) %}
+{% macro success_button(text, href='', onclick='', icon='') %}
     {{ neon_button(
         text=text,
-        type=type,
         color='green',
         size='md',
         href=href,
         onclick=onclick,
-        icon=icon,
-        full_width=full_width
+        icon=icon
     ) }}
 {% endmacro %}
 
-{% macro ghost_button(text, href='', onclick='', color='cyan', type='button', full_width=false) %}
+{% macro ghost_button(text, href='', onclick='', color='cyan') %}
     {{ neon_button(
         text=text,
-        type=type,
         color=color,
         size='sm',
         href=href,
         onclick=onclick,
-        full_width=full_width,
         class='bg-transparent hover:bg-current/5'
     ) }}
 {% endmacro %}

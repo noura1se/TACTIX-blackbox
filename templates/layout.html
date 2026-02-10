@@ -3,40 +3,265 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>TACTIX // BLACKBOX</title>
+    <title>{% block title %}TACTIX // BLACKBOX{% endblock %}</title>
+    
+    <!-- Fonts: Cyberpunk aesthetic - Orbitron for headers, Rajdhani for body -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Rajdhani:wght@300;400;500;600;700&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+    
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Custom Tailwind Config -->
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        'neon-cyan': '#00f6ff',
+                        'neon-pink': '#ff006e',
+                        'neon-purple': '#b833ff',
+                        'neon-green': '#00ff9f',
+                        'breach-red': '#ff3366',
+                        'void': '#0a0a0f',
+                        'void-dark': '#050508',
+                        'grid-line': '#1a1a2e',
+                    },
+                    fontFamily: {
+                        'display': ['Orbitron', 'sans-serif'],
+                        'body': ['Rajdhani', 'sans-serif'],
+                        'mono': ['Share Tech Mono', 'monospace'],
+                    },
+                    boxShadow: {
+                        'neon-cyan': '0 0 10px #00f6ff, 0 0 20px #00f6ff, 0 0 30px #00f6ff',
+                        'neon-pink': '0 0 10px #ff006e, 0 0 20px #ff006e, 0 0 30px #ff006e',
+                        'neon-purple': '0 0 10px #b833ff, 0 0 20px #b833ff, 0 0 30px #b833ff',
+                        'neon-green': '0 0 10px #00ff9f, 0 0 20px #00ff9f',
+                        'breach': '0 0 15px #ff3366, 0 0 30px #ff3366, 0 0 45px #ff3366',
+                    },
+                    animation: {
+                        'flicker': 'flicker 3s infinite',
+                        'pulse-slow': 'pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+                        'scan': 'scan 2s linear infinite',
+                        'glitch': 'glitch 0.5s infinite',
+                        'terminal-blink': 'terminal-blink 1s step-end infinite',
+                    },
+                    keyframes: {
+                        flicker: {
+                            '0%, 100%': { opacity: '1' },
+                            '41.99%': { opacity: '1' },
+                            '42%': { opacity: '0.8' },
+                            '43%': { opacity: '1' },
+                            '45.99%': { opacity: '1' },
+                            '46%': { opacity: '0.6' },
+                            '46.5%': { opacity: '1' },
+                        },
+                        scan: {
+                            '0%': { transform: 'translateY(-100%)' },
+                            '100%': { transform: 'translateY(100%)' },
+                        },
+                        glitch: {
+                            '0%': { transform: 'translate(0)' },
+                            '20%': { transform: 'translate(-2px, 2px)' },
+                            '40%': { transform: 'translate(-2px, -2px)' },
+                            '60%': { transform: 'translate(2px, 2px)' },
+                            '80%': { transform: 'translate(2px, -2px)' },
+                            '100%': { transform: 'translate(0)' },
+                        },
+                        'terminal-blink': {
+                            '0%, 49%': { opacity: '1' },
+                            '50%, 100%': { opacity: '0' },
+                        },
+                    },
+                }
+            }
+        }
+    </script>
+    
+    <!-- Custom Styles -->
     <link rel="stylesheet" href="{{ url_for('static', filename='css/blackbox.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/animations.css') }}">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    
+    {% block extra_head %}{% endblock %}
 </head>
-<body>
-    <div class="background-grid"></div>
-    <div class="topbar">
-        <div class="topbar-left">
-            <h1 class="logo">TACTIX // <span class="logo-accent">BLACKBOX</span></h1>
+<body class="bg-void text-gray-100 font-body antialiased overflow-x-hidden">
+    
+    <!-- Background Effects -->
+    <div class="fixed inset-0 pointer-events-none z-0">
+        <!-- Grid Background -->
+        <div class="absolute inset-0 opacity-20">
+            <div class="grid-pattern"></div>
         </div>
-        <div class="topbar-right">
-            <nav class="nav-links">
-                <a href="{{ url_for('home') }}" class="nav-link {% if request.endpoint == 'home' %}active{% endif %}">
-                    <i class="fas fa-home"></i> Lobby
-                </a>
-                <a href="{{ url_for('configure') }}" class="nav-link {% if request.endpoint == 'configure' %}active{% endif %}">
-                    <i class="fas fa-cog"></i> Configure
-                </a>
-                <a href="{{ url_for('game') }}" class="nav-link {% if request.endpoint == 'game' %}active{% endif %}">
-                    <i class="fas fa-gamepad"></i> Game
-                </a>
-                <a href="{{ url_for('stats') }}" class="nav-link {% if request.endpoint == 'stats' %}active{% endif %}">
-                    <i class="fas fa-chart-bar"></i> Statistics
-                </a>
-            </nav>
-        </div>
+        
+        <!-- Scan Line Effect -->
+        <div class="scan-line"></div>
+        
+        <!-- Vignette -->
+        <div class="absolute inset-0 bg-gradient-radial from-transparent via-transparent to-void-dark opacity-70"></div>
+        
+        <!-- Noise Texture -->
+        <div class="noise-overlay"></div>
     </div>
-
-    <main class="main-content">
-        {% block content %}{% endblock %}
-    </main>
-
+    
+    <!-- Main Container -->
+    <div class="relative z-10 min-h-screen flex flex-col">
+        
+        <!-- Header/Navigation -->
+        <header class="border-b border-grid-line backdrop-blur-sm bg-void-dark/50">
+            <nav class="container mx-auto px-6 py-4">
+                <div class="flex items-center justify-between">
+                    <!-- Logo -->
+                    <a href="/" class="group">
+                        <h1 class="font-display font-black text-3xl tracking-wider">
+                            <span class="text-neon-cyan group-hover:text-shadow-neon-cyan transition-all duration-300 animate-flicker">TACTIX</span>
+                            <span class="text-gray-500 mx-2">//</span>
+                            <span class="text-breach-red group-hover:shadow-breach transition-all duration-300">BLACKBOX</span>
+                        </h1>
+                    </a>
+                    
+                    <!-- Navigation Links -->
+                    <div class="flex items-center space-x-6 font-mono text-sm uppercase tracking-widest">
+                        <a href="/" class="nav-link {% if request.endpoint == 'home' %}active{% endif %}">
+                            <span class="text-neon-cyan">></span> Home
+                        </a>
+                        <a href="/configure" class="nav-link {% if request.endpoint == 'configure' %}active{% endif %}">
+                            <span class="text-neon-purple">></span> Configure
+                        </a>
+                        <a href="/stats" class="nav-link {% if request.endpoint == 'stats' %}active{% endif %}">
+                            <span class="text-neon-green">></span> Stats
+                        </a>
+                    </div>
+                </div>
+            </nav>
+        </header>
+        
+        <!-- Main Content -->
+        <main class="flex-grow container mx-auto px-6 py-8">
+            {% block content %}{% endblock %}
+        </main>
+        
+        <!-- Footer -->
+        <footer class="border-t border-grid-line backdrop-blur-sm bg-void-dark/30 mt-auto">
+            <div class="container mx-auto px-6 py-6">
+                <div class="flex items-center justify-between text-xs font-mono uppercase tracking-wider text-gray-600">
+                    <div>
+                        <span class="text-neon-cyan">SYSTEM STATUS:</span> 
+                        <span class="text-neon-green animate-pulse-slow">OPERATIONAL</span>
+                    </div>
+                    <div>
+                        <span class="text-gray-700">BREACH PROTOCOL</span> 
+                        <span class="text-neon-cyan">v2.0</span>
+                    </div>
+                    <div>
+                        <span class="text-gray-700">UPTIME:</span> 
+                        <span class="terminal-cursor">█</span>
+                    </div>
+                </div>
+            </div>
+        </footer>
+    </div>
+    
+    <!-- Toast Notification Container -->
+    <div id="toast-container" class="fixed top-6 right-6 z-50 space-y-3"></div>
+    
+    <!-- Scripts -->
     <script src="{{ url_for('static', filename='js/ui.js') }}"></script>
-    {% block scripts %}{% endblock %}
+    {% block extra_scripts %}{% endblock %}
+    
+    <style>
+        /* Grid Pattern */
+        .grid-pattern {
+            background-image: 
+                linear-gradient(rgba(0, 246, 255, 0.03) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(0, 246, 255, 0.03) 1px, transparent 1px);
+            background-size: 50px 50px;
+            width: 100%;
+            height: 100%;
+        }
+        
+        /* Scan Line */
+        .scan-line {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 2px;
+            background: linear-gradient(to bottom, 
+                transparent, 
+                rgba(0, 246, 255, 0.5), 
+                transparent);
+            animation: scan 6s linear infinite;
+            pointer-events: none;
+        }
+        
+        /* Noise Overlay */
+        .noise-overlay {
+            position: absolute;
+            inset: 0;
+            background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 400 400' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E");
+            opacity: 0.03;
+            pointer-events: none;
+        }
+        
+        /* Nav Links */
+        .nav-link {
+            position: relative;
+            color: #9ca3af;
+            transition: all 0.3s ease;
+            padding: 0.5rem 1rem;
+        }
+        
+        .nav-link:hover {
+            color: #00f6ff;
+            text-shadow: 0 0 10px #00f6ff;
+        }
+        
+        .nav-link.active {
+            color: #00f6ff;
+            background: rgba(0, 246, 255, 0.1);
+            border: 1px solid rgba(0, 246, 255, 0.3);
+            box-shadow: 0 0 10px rgba(0, 246, 255, 0.3);
+        }
+        
+        .nav-link::before {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 0;
+            height: 2px;
+            background: #00f6ff;
+            transition: width 0.3s ease;
+        }
+        
+        .nav-link:hover::before {
+            width: 100%;
+        }
+        
+        /* Terminal Cursor */
+        .terminal-cursor {
+            animation: terminal-blink 1s step-end infinite;
+        }
+        
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        
+        ::-webkit-scrollbar-track {
+            background: #0a0a0f;
+        }
+        
+        ::-webkit-scrollbar-thumb {
+            background: linear-gradient(180deg, #00f6ff, #b833ff);
+            border-radius: 4px;
+        }
+        
+        ::-webkit-scrollbar-thumb:hover {
+            background: linear-gradient(180deg, #b833ff, #ff006e);
+        }
+    </style>
 </body>
 </html>

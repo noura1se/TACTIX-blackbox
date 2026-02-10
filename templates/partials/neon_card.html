@@ -1,0 +1,175 @@
+{% macro neon_card(
+    title='',
+    subtitle='',
+    color='cyan',
+    glow=true,
+    bordered=true,
+    scanline=false,
+    class=''
+) %}
+
+{# Color mapping #}
+{% set color_map = {
+    'cyan': {
+        'border': 'border-neon-cyan/30',
+        'shadow': 'shadow-neon-cyan',
+        'text': 'text-neon-cyan',
+        'bg': 'bg-neon-cyan/5',
+        'glow': 'rgba(0, 246, 255, 0.2)'
+    },
+    'pink': {
+        'border': 'border-neon-pink/30',
+        'shadow': 'shadow-neon-pink',
+        'text': 'text-neon-pink',
+        'bg': 'bg-neon-pink/5',
+        'glow': 'rgba(255, 0, 110, 0.2)'
+    },
+    'purple': {
+        'border': 'border-neon-purple/30',
+        'shadow': 'shadow-neon-purple',
+        'text': 'text-neon-purple',
+        'bg': 'bg-neon-purple/5',
+        'glow': 'rgba(184, 51, 255, 0.2)'
+    },
+    'green': {
+        'border': 'border-neon-green/30',
+        'shadow': 'shadow-neon-green',
+        'text': 'text-neon-green',
+        'bg': 'bg-neon-green/5',
+        'glow': 'rgba(0, 255, 159, 0.2)'
+    },
+    'red': {
+        'border': 'border-breach-red/30',
+        'shadow': 'shadow-breach',
+        'text': 'text-breach-red',
+        'bg': 'bg-breach-red/5',
+        'glow': 'rgba(255, 51, 102, 0.2)'
+    }
+} %}
+
+{% set theme = color_map.get(color, color_map['cyan']) %}
+
+<div class="neon-card relative backdrop-blur-sm {{ theme.bg }} 
+            {% if bordered %}border {{ theme.border }}{% endif %}
+            {% if glow %}{{ theme.shadow }}/50{% endif %}
+            transition-all duration-300 hover:{{ theme.shadow }}
+            {{ class }}"
+     data-card-color="{{ color }}">
+    
+    <!-- Corner Decorations -->
+    <div class="absolute top-0 left-0 w-3 h-3 border-t-2 border-l-2 {{ theme.border }}"></div>
+    <div class="absolute top-0 right-0 w-3 h-3 border-t-2 border-r-2 {{ theme.border }}"></div>
+    <div class="absolute bottom-0 left-0 w-3 h-3 border-b-2 border-l-2 {{ theme.border }}"></div>
+    <div class="absolute bottom-0 right-0 w-3 h-3 border-b-2 border-r-2 {{ theme.border }}"></div>
+    
+    <!-- Scan Line Effect (optional) -->
+    {% if scanline %}
+    <div class="absolute inset-0 overflow-hidden pointer-events-none">
+        <div class="card-scanline" style="background: linear-gradient(to bottom, transparent, {{ theme.glow }}, transparent);"></div>
+    </div>
+    {% endif %}
+    
+    <div class="card-content p-6 relative z-10">
+        <!-- Header -->
+        {% if title or subtitle %}
+        <div class="card-header mb-4">
+            {% if title %}
+            <h3 class="font-display font-bold text-xl {{ theme.text }} uppercase tracking-wider mb-1 animate-flicker">
+                {{ title }}
+            </h3>
+            {% endif %}
+            
+            {% if subtitle %}
+            <p class="font-mono text-xs text-gray-500 uppercase tracking-widest">
+                {{ subtitle }}
+            </p>
+            {% endif %}
+        </div>
+        {% endif %}
+        
+        <!-- Content Slot -->
+        <div class="card-body">
+            {{ caller() }}
+        </div>
+    </div>
+    
+    <!-- Glow Effect on Hover -->
+    {% if glow %}
+    <div class="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none"
+         style="background: radial-gradient(circle at 50% 50%, {{ theme.glow }} 0%, transparent 70%);"></div>
+    {% endif %}
+</div>
+
+<style>
+    .neon-card {
+        position: relative;
+        overflow: hidden;
+    }
+    
+    .card-scanline {
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 3px;
+        animation: scan 3s linear infinite;
+        will-change: transform;
+    }
+    
+    @keyframes scan {
+        0% { transform: translateY(-100%); }
+        100% { transform: translateY(calc(100vh)); }
+    }
+    
+    /* Hover Effects */
+    .neon-card:hover {
+        transform: translateY(-2px);
+    }
+    
+    .neon-card::before {
+        content: '';
+        position: absolute;
+        top: -2px;
+        left: -2px;
+        right: -2px;
+        bottom: -2px;
+        background: linear-gradient(45deg, transparent, currentColor, transparent);
+        opacity: 0;
+        transition: opacity 0.3s ease;
+        pointer-events: none;
+        z-index: -1;
+    }
+    
+    .neon-card:hover::before {
+        opacity: 0.1;
+    }
+</style>
+
+{% endmacro %}
+
+
+{# Quick variant macros for common use cases #}
+
+{% macro info_card(title='', subtitle='') %}
+    {% call neon_card(title=title, subtitle=subtitle, color='cyan', glow=true, scanline=true) %}
+        {{ caller() }}
+    {% endcall %}
+{% endmacro %}
+
+{% macro warning_card(title='', subtitle='') %}
+    {% call neon_card(title=title, subtitle=subtitle, color='red', glow=true, scanline=false) %}
+        {{ caller() }}
+    {% endcall %}
+{% endmacro %}
+
+{% macro success_card(title='', subtitle='') %}
+    {% call neon_card(title=title, subtitle=subtitle, color='green', glow=true, scanline=false) %}
+        {{ caller() }}
+    {% endcall %}
+{% endmacro %}
+
+{% macro stat_card(title='', subtitle='', color='purple') %}
+    {% call neon_card(title=title, subtitle=subtitle, color=color, glow=false, bordered=true, scanline=false) %}
+        {{ caller() }}
+    {% endcall %}
+{% endmacro %}

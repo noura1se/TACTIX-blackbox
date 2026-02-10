@@ -1,0 +1,347 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TACTIX // BLACKBOX - UI Demo</title>
+    
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Rajdhani:wght@300;400;500;600;700&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+    
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        'neon-cyan': '#00f6ff',
+                        'neon-pink': '#ff006e',
+                        'neon-purple': '#b833ff',
+                        'neon-green': '#00ff9f',
+                        'breach-red': '#ff3366',
+                        'void': '#0a0a0f',
+                        'void-dark': '#050508',
+                        'grid-line': '#1a1a2e',
+                    },
+                    fontFamily: {
+                        'display': ['Orbitron', 'sans-serif'],
+                        'body': ['Rajdhani', 'sans-serif'],
+                        'mono': ['Share Tech Mono', 'monospace'],
+                    },
+                }
+            }
+        }
+    </script>
+    
+    <style>
+        /* Inline CSS for demo */
+        body {
+            background: #0a0a0f;
+            color: #e5e7eb;
+        }
+        
+        .grid-pattern {
+            background-image: 
+                linear-gradient(rgba(0, 246, 255, 0.03) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(0, 246, 255, 0.03) 1px, transparent 1px);
+            background-size: 50px 50px;
+            width: 100%;
+            height: 100%;
+        }
+        
+        .neon-card {
+            background: rgba(10, 10, 15, 0.8);
+            border: 1px solid rgba(0, 246, 255, 0.3);
+            box-shadow: 0 0 20px rgba(0, 246, 255, 0.2);
+            -webkit-backdrop-filter: blur(10px); /* Safari 9+ */
+            backdrop-filter: blur(10px);
+            position: relative;
+        }
+        
+        .neon-button {
+            background: rgba(0, 246, 255, 0.1);
+            border: 2px solid #00f6ff;
+            color: #00f6ff;
+            padding: 0.75rem 2rem;
+            font-family: 'Orbitron', sans-serif;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            transition: all 0.3s ease;
+        }
+        
+        .neon-button:hover {
+            background: rgba(0, 246, 255, 0.2);
+            box-shadow: 0 0 20px #00f6ff;
+            transform: translateY(-2px);
+        }
+        
+        @keyframes flicker {
+            0%, 100% { opacity: 1; }
+            41.99% { opacity: 1; }
+            42% { opacity: 0.8; }
+            43% { opacity: 1; }
+        }
+        
+        .animate-flicker {
+            animation: flicker 3s infinite;
+        }
+        
+        @keyframes pulse-slow {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+        
+        .animate-pulse-slow {
+            animation: pulse-slow 3s ease-in-out infinite;
+        }
+        
+        .game-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 0;
+            background: rgba(0, 0, 0, 0.5);
+            border: 2px solid #1a1a2e;
+            max-width: 400px;
+        }
+        
+        .grid-cell {
+            aspect-ratio: 1;
+            border: 1px solid #1a1a2e;
+            background: rgba(10, 10, 15, 0.8);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            font-size: 3rem;
+            font-family: 'Orbitron', sans-serif;
+            font-weight: 900;
+            transition: all 0.3s ease;
+        }
+        
+        .grid-cell:hover {
+            background: rgba(0, 246, 255, 0.05);
+            border-color: #00f6ff;
+        }
+        
+        .player-x {
+            color: #00f6ff;
+            text-shadow: 0 0 20px #00f6ff;
+        }
+        
+        .player-o {
+            color: #ff3366;
+            text-shadow: 0 0 20px #ff3366;
+        }
+    </style>
+</head>
+<body class="font-body antialiased">
+    
+    <!-- Background -->
+    <div class="fixed inset-0 pointer-events-none opacity-20">
+        <div class="grid-pattern"></div>
+    </div>
+    
+    <!-- Container -->
+    <div class="relative z-10 min-h-screen py-12">
+        <div class="container mx-auto px-6 max-w-6xl">
+            
+            <!-- Header -->
+            <header class="text-center mb-16">
+                <h1 class="font-display font-black text-6xl mb-4">
+                    <span class="text-neon-cyan animate-flicker">TACTIX</span>
+                    <span class="text-gray-500 mx-2">//</span>
+                    <span class="text-breach-red">BLACKBOX</span>
+                </h1>
+                <p class="font-mono text-xl text-gray-400 uppercase tracking-widest">
+                    <span class="text-neon-purple">◆</span> UI Component Demo <span class="text-neon-purple">◆</span>
+                </p>
+            </header>
+            
+            <!-- Components Grid -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-8 mb-12">
+                
+                <!-- Card Demo -->
+                <div class="neon-card p-6">
+                    <h2 class="font-display font-bold text-xl text-neon-cyan uppercase tracking-wider mb-4 animate-flicker">
+                        Neon Card
+                    </h2>
+                    <p class="text-gray-300 mb-4 leading-relaxed">
+                        A cyberpunk-styled card component with neon borders, corner decorations, and glow effects.
+                        Perfect for displaying game stats, system info, or any content that needs that futuristic edge.
+                    </p>
+                    <div class="flex gap-2">
+                        <span class="px-3 py-1 bg-neon-cyan/10 border border-neon-cyan/30 rounded text-neon-cyan text-xs font-mono">
+                            GLOW EFFECT
+                        </span>
+                        <span class="px-3 py-1 bg-neon-purple/10 border border-neon-purple/30 rounded text-neon-purple text-xs font-mono">
+                            BACKDROP BLUR
+                        </span>
+                    </div>
+                </div>
+                
+                <!-- Button Demo -->
+                <div class="neon-card p-6">
+                    <h2 class="font-display font-bold text-xl text-neon-purple uppercase tracking-wider mb-4">
+                        Neon Buttons
+                    </h2>
+                    <p class="text-gray-300 mb-4 leading-relaxed">
+                        Interactive buttons with hover effects, corner accents, and customizable colors.
+                    </p>
+                    <div class="space-y-3">
+                        <button class="neon-button w-full">INITIATE BREACH</button>
+                        <button class="neon-button w-full" style="border-color: #b833ff; color: #b833ff;">
+                            CONFIGURE SYSTEM
+                        </button>
+                        <button class="neon-button w-full" style="border-color: #00ff9f; color: #00ff9f;">
+                            VIEW STATISTICS
+                        </button>
+                    </div>
+                </div>
+                
+                <!-- Game Grid Demo -->
+                <div class="neon-card p-6 md:col-span-2">
+                    <h2 class="font-display font-bold text-xl text-neon-green uppercase tracking-wider mb-4">
+                        Game Grid Demo
+                    </h2>
+                    <div class="flex flex-col md:flex-row gap-8 items-center">
+                        <div class="game-grid">
+                            <div class="grid-cell">
+                                <span class="player-x">X</span>
+                            </div>
+                            <div class="grid-cell"></div>
+                            <div class="grid-cell">
+                                <span class="player-x">X</span>
+                            </div>
+                            <div class="grid-cell"></div>
+                            <div class="grid-cell">
+                                <span class="player-o">O</span>
+                            </div>
+                            <div class="grid-cell"></div>
+                            <div class="grid-cell">
+                                <span class="player-x">X</span>
+                            </div>
+                            <div class="grid-cell"></div>
+                            <div class="grid-cell">
+                                <span class="player-o">O</span>
+                            </div>
+                        </div>
+                        <div class="flex-1">
+                            <p class="text-gray-300 mb-4 leading-relaxed">
+                                Interactive 3×3 grid with neon glow effects on hover.
+                                Supports multiple grid sizes (3×3, 4×4, 5×5) and win-line animations.
+                            </p>
+                            <div class="font-mono text-sm space-y-2">
+                                <div class="flex items-center gap-2">
+                                    <span class="text-neon-cyan">></span>
+                                    <span class="text-gray-500">Turn: OPERATOR (X)</span>
+                                </div>
+                                <div class="flex items-center gap-2">
+                                    <span class="text-neon-purple">></span>
+                                    <span class="text-gray-500">Moves: 5/9</span>
+                                </div>
+                                <div class="flex items-center gap-2">
+                                    <span class="text-neon-green">✓</span>
+                                    <span class="text-gray-500">System: READY</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Terminal Demo -->
+                <div class="neon-card p-0 md:col-span-2" style="border-color: rgba(0, 246, 255, 0.3);">
+                    <!-- Terminal Header -->
+                    <div class="bg-grid-line/50 px-4 py-2 flex items-center justify-between border-b border-neon-cyan/20">
+                        <div class="flex items-center gap-3">
+                            <div class="flex gap-2">
+                                <div class="w-3 h-3 rounded-full bg-breach-red/50 border border-breach-red"></div>
+                                <div class="w-3 h-3 rounded-full bg-yellow-500/50 border border-yellow-500"></div>
+                                <div class="w-3 h-3 rounded-full bg-neon-green/50 border border-neon-green"></div>
+                            </div>
+                            <span class="font-mono text-xs text-neon-cyan uppercase tracking-wider">SYSTEM LOG</span>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <div class="w-2 h-2 rounded-full bg-neon-green animate-pulse-slow"></div>
+                            <span class="font-mono text-xs text-gray-500 uppercase">ACTIVE</span>
+                        </div>
+                    </div>
+                    <!-- Terminal Content -->
+                    <div class="p-4 font-mono text-sm space-y-1">
+                        <div class="flex gap-3">
+                            <span class="text-neon-cyan">></span>
+                            <span class="text-gray-300">BREACH PROTOCOL v2.0 - LOADING...</span>
+                        </div>
+                        <div class="flex gap-3">
+                            <span class="text-neon-purple">◆</span>
+                            <span class="text-gray-400">Initializing neural grid interface...</span>
+                        </div>
+                        <div class="flex gap-3">
+                            <span class="text-neon-cyan">></span>
+                            <span class="text-gray-300">Grid matrices: 3×3, 4×4, 5×5 - ONLINE</span>
+                        </div>
+                        <div class="flex gap-3">
+                            <span class="text-neon-green">✓</span>
+                            <span class="text-gray-300">Operator vs System mode: READY</span>
+                        </div>
+                        <div class="flex gap-3">
+                            <span class="text-breach-red">>></span>
+                            <span class="text-breach-red">ALL SYSTEMS OPERATIONAL - READY FOR BREACH</span>
+                        </div>
+                    </div>
+                </div>
+                
+            </div>
+            
+            <!-- Color Palette -->
+            <div class="neon-card p-6">
+                <h2 class="font-display font-bold text-xl text-neon-cyan uppercase tracking-wider mb-6">
+                    Color Palette
+                </h2>
+                <div class="grid grid-cols-2 md:grid-cols-5 gap-4">
+                    <div class="text-center">
+                        <div class="w-full h-20 bg-neon-cyan rounded mb-2"></div>
+                        <p class="font-mono text-xs text-neon-cyan">NEON CYAN</p>
+                        <p class="font-mono text-xs text-gray-600">#00f6ff</p>
+                    </div>
+                    <div class="text-center">
+                        <div class="w-full h-20 bg-neon-pink rounded mb-2"></div>
+                        <p class="font-mono text-xs text-neon-pink">NEON PINK</p>
+                        <p class="font-mono text-xs text-gray-600">#ff006e</p>
+                    </div>
+                    <div class="text-center">
+                        <div class="w-full h-20 bg-neon-purple rounded mb-2"></div>
+                        <p class="font-mono text-xs text-neon-purple">NEON PURPLE</p>
+                        <p class="font-mono text-xs text-gray-600">#b833ff</p>
+                    </div>
+                    <div class="text-center">
+                        <div class="w-full h-20 bg-neon-green rounded mb-2"></div>
+                        <p class="font-mono text-xs text-neon-green">NEON GREEN</p>
+                        <p class="font-mono text-xs text-gray-600">#00ff9f</p>
+                    </div>
+                    <div class="text-center">
+                        <div class="w-full h-20 bg-breach-red rounded mb-2"></div>
+                        <p class="font-mono text-xs text-breach-red">BREACH RED</p>
+                        <p class="font-mono text-xs text-gray-600">#ff3366</p>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Footer -->
+            <footer class="mt-12 text-center font-mono text-sm text-gray-600">
+                <p class="mb-2">
+                    <span class="text-neon-cyan">SYSTEM STATUS:</span> 
+                    <span class="text-neon-green animate-pulse-slow">OPERATIONAL</span>
+                </p>
+                <p>TACTIX // BLACKBOX - Phase 2: Frontend UI Demo</p>
+            </footer>
+            
+        </div>
+    </div>
+    
+</body>
+</html>

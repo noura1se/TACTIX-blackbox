@@ -1,54 +1,683 @@
 {% extends "layout.html" %}
+{% from "partials/neon_card.html" import neon_card %}
+{% from "partials/neon_button.html" import danger_button, ghost_button %}
+
+{% block title %}TACTIX // BLACKBOX - BREACH IN PROGRESS{% endblock %}
+
+{% block extra_head %}
+<!-- ============================================ -->
+<!-- STYLES INTÉGRÉS - GRILLE FORCÉE VISIBLE -->
+<!-- ============================================ -->
+<style>
+/* ===== GAME BOARD - FORCÉ VISIBLE ===== */
+.game-grid {
+    display: grid !important;
+    grid-template-columns: repeat(3, 1fr) !important;
+    gap: 0 !important;
+    background: #000000;
+    border: 3px solid #00f6ff;
+    border-radius: 8px;
+    max-width: 600px;
+    margin: 2rem auto;
+    padding: 0;
+    box-shadow: 0 0 30px rgba(0, 246, 255, 0.3);
+}
+
+/* Adaptation tailles */
+.game-grid.size-3 { grid-template-columns: repeat(3, 1fr) !important; }
+.game-grid.size-4 { grid-template-columns: repeat(4, 1fr) !important; }
+.game-grid.size-5 { grid-template-columns: repeat(5, 1fr) !important; }
+
+/* ===== GRID CELLS ===== */
+.grid-cell {
+    aspect-ratio: 1;
+    background: #0a0a0f;
+    border: 2px solid #1a1a2e;
+    display: flex !important;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    min-height: 100px;
+    font-size: 3rem;
+    font-weight: bold;
+    transition: all 0.3s ease;
+    position: relative;
+}
+
+.grid-cell:hover:not(.occupied) {
+    background: rgba(0, 246, 255, 0.15);
+    border-color: #00f6ff;
+    box-shadow: inset 0 0 20px rgba(0, 246, 255, 0.2);
+}
+
+.grid-cell.occupied {
+    cursor: not-allowed;
+}
+
+/* Symboles X et O */
+.cell-symbol {
+    font-family: 'Orbitron', sans-serif;
+    font-size: 4rem;
+    animation: symbolAppear 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+}
+
+.cell-symbol.player-x {
+    color: #00f6ff;
+    text-shadow: 0 0 20px #00f6ff, 0 0 40px #00f6ff;
+}
+
+.cell-symbol.player-o {
+    color: #ff3366;
+    text-shadow: 0 0 20px #ff3366, 0 0 40px #ff3366;
+}
+
+@keyframes symbolAppear {
+    0% { transform: scale(0) rotate(-180deg); opacity: 0; }
+    50% { transform: scale(1.2) rotate(10deg); }
+    100% { transform: scale(1) rotate(0deg); opacity: 1; }
+}
+
+/* Win line highlight */
+.grid-cell.win-cell {
+    background: rgba(0, 255, 159, 0.2);
+    border-color: #00ff9f;
+    animation: winPulse 1s ease-in-out infinite;
+}
+
+@keyframes winPulse {
+    0%, 100% { box-shadow: inset 0 0 30px rgba(0, 255, 159, 0.3); }
+    50% { box-shadow: inset 0 0 50px rgba(0, 255, 159, 0.6); }
+}
+
+/* ===== STATUS PANEL ===== */
+.status-indicator {
+    padding: 1rem;
+    border-radius: 8px;
+    text-align: center;
+    margin-bottom: 1rem;
+}
+
+.status-indicator.active {
+    background: rgba(0, 246, 255, 0.1);
+    border: 2px solid #00f6ff;
+    box-shadow: 0 0 20px rgba(0, 246, 255, 0.2);
+}
+
+.status-indicator.waiting {
+    background: rgba(128, 128, 128, 0.1);
+    border: 2px solid #4a4a5e;
+}
+
+.status-label {
+    font-size: 0.875rem;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    color: #8892b0;
+    margin-bottom: 0.5rem;
+}
+
+.status-player {
+    font-size: 2rem;
+    font-weight: bold;
+    font-family: 'Orbitron', sans-serif;
+}
+
+.player-x { color: #00f6ff; }
+.player-o { color: #ff3366; }
+
+/* ===== MOVE HISTORY ===== */
+.move-item {
+    padding: 0.5rem 1rem;
+    margin-bottom: 0.5rem;
+    background: rgba(26, 26, 46, 0.5);
+    border-left: 3px solid #00f6ff;
+    border-radius: 4px;
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 0.875rem;
+    animation: slideInRight 0.3s ease;
+}
+
+@keyframes slideInRight {
+    from { transform: translateX(-20px); opacity: 0; }
+    to { transform: translateX(0); opacity: 1; }
+}
+
+/* ===== GAME OVER MODAL ===== */
+.game-over-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.9);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    z-index: 9999;
+    -webkit-backdrop-filter: blur(10px); /* Safari 9+ */
+    backdrop-filter: blur(10px);
+}
+
+.game-over-overlay.active {
+    display: flex !important;
+}
+
+.game-over-content {
+    background: linear-gradient(135deg, #0a0a0f 0%, #1a1a2e 100%);
+    border: 3px solid #00f6ff;
+    border-radius: 12px;
+    padding: 3rem;
+    text-align: center;
+    max-width: 500px;
+    box-shadow: 0 0 50px rgba(0, 246, 255, 0.5);
+    animation: modalAppear 0.5s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+}
+
+@keyframes modalAppear {
+    0% { transform: scale(0.5) rotate(-10deg); opacity: 0; }
+    100% { transform: scale(1) rotate(0); opacity: 1; }
+}
+
+.game-over-title {
+    font-size: 3rem;
+    font-family: 'Orbitron', sans-serif;
+    margin-bottom: 1rem;
+    text-shadow: 0 0 30px currentColor;
+}
+
+.game-over-title.victory { color: #00ff9f; }
+.game-over-title.defeat { color: #ff3366; }
+.game-over-title.draw { color: #b833ff; }
+
+/* ===== RESPONSIVE ===== */
+@media (max-width: 768px) {
+    .grid-cell {
+        min-height: 80px;
+        font-size: 2.5rem;
+    }
+    
+    .cell-symbol {
+        font-size: 3rem;
+    }
+}
+</style>
+{% endblock %}
 
 {% block content %}
-<div class="game-container">
-    <div class="game-left">
-        <div class="neon-card">
-            <div class="neon-card-header">
-                <h2>OPERATOR <span class="vs">VS</span> SYSTEM</h2>
-            </div>
-            <div class="neon-card-body">
-                <div id="game-board" class="game-board">
-                    <!-- Le plateau de jeu sera généré par JavaScript -->
+<div class="container mx-auto px-4 py-8">
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        
+        <!-- ===== GRILLE DE JEU ===== -->
+        <div class="lg:col-span-2">
+            {% call neon_card(
+                title='BREACH GRID',
+                color='cyan',
+                glow=true,
+                scanline=true
+            ) %}
+                <!-- Game Board Container -->
+                <div id="game-board-container">
+                    <div id="game-board" class="game-grid size-3">
+                        <!-- Grille créée par JavaScript -->
+                    </div>
                 </div>
+
+                <!-- Game Status -->
+                <div id="game-status" class="mt-4 text-center text-lg font-mono">
+                    <span class="text-cyan-400">●</span> READY TO BREACH
+                </div>
+            {% endcall %}
+
+            <!-- Action Buttons -->
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mt-6">
+                <button id="btn-scan" class="neon-button" disabled>
+                    <span class="text-purple-400">🔍</span> EXPLOIT SCAN
+                </button>
+                
+                <button id="btn-undo" class="neon-button" disabled>
+                    <span class="text-cyan-400">↶</span> UNDO MOVE
+                </button>
+                
+                <button id="btn-reset" class="neon-button">
+                    <span class="text-red-400">⟳</span> RESET GRID
+                </button>
+                
+                <a href="/configure" class="neon-button text-center">
+                    <span class="text-gray-400">←</span> CONFIGURE
+                </a>
             </div>
         </div>
-    </div>
 
-    <div class="game-right">
-        <div class="neon-card">
-            <div class="neon-card-header">
-                <h2>BREACH CONTROLS</h2>
-            </div>
-            <div class="neon-card-body">
-                <div class="button-group-vertical">
-                    <button id="exploit-scan" class="neon-button primary">
-                        <i class="fas fa-search"></i> EXPLOIT SCAN
-                    </button>
-                    <button id="firewall-lock" class="neon-button primary">
-                        <i class="fas fa-shield-alt"></i> FIREWALL LOCK
-                    </button>
-                    <button id="reset-game" class="neon-button danger">
-                        <i class="fas fa-redo"></i> RESET GRID
-                    </button>
-                    <button id="undo-move" class="neon-button ghost">
-                        <i class="fas fa-undo"></i> UNDO MOVE
-                    </button>
+        <!-- ===== PANEL LATERAL ===== -->
+        <div class="space-y-6">
+            
+            <!-- Status Indicators -->
+            {% call neon_card(title='SYSTEM STATUS', color='cyan') %}
+                <div id="status-operator" class="status-indicator active">
+                    <div class="status-label">Operator</div>
+                    <div class="status-player player-x">X</div>
+                    <div class="text-sm text-cyan-400 mt-2">● ACTIVE</div>
                 </div>
+                
+                <div id="status-system" class="status-indicator waiting">
+                    <div class="status-label">System</div>
+                    <div class="status-player player-o">O</div>
+                    <div class="text-sm text-gray-500 mt-2">○ WAITING</div>
+                </div>
+            {% endcall %}
 
-                <div class="status-indicators">
-                    <div class="status-item">
-                        <span class="status-label">GREALL SPJECT</span>
-                        <span class="status-value">ACTIVE</span>
+            <!-- Game Info -->
+            {% call neon_card(title='BREACH INFO', color='purple') %}
+                <div class="space-y-2 text-sm font-mono">
+                    <div class="flex justify-between">
+                        <span class="text-gray-400">Grid Size:</span>
+                        <span id="info-grid-size" class="text-purple-400">3×3</span>
                     </div>
-                    <!-- Ajoutez d'autres indicateurs si nécessaire -->
+                    <div class="flex justify-between">
+                        <span class="text-gray-400">Mode:</span>
+                        <span id="info-mode" class="text-purple-400">vs AI</span>
+                    </div>
+                    <div class="flex justify-between">
+                        <span class="text-gray-400">Difficulty:</span>
+                        <span id="info-difficulty" class="text-purple-400">EASY</span>
+                    </div>
+                    <div class="flex justify-between">
+                        <span class="text-gray-400">Moves:</span>
+                        <span id="info-moves" class="text-cyan-400">0</span>
+                    </div>
                 </div>
-            </div>
+            {% endcall %}
+
+            <!-- Move History -->
+            {% call neon_card(title='MOVE LOG', color='green') %}
+                <div id="move-history" class="max-h-64 overflow-y-auto space-y-2">
+                    <div class="text-center text-gray-500 text-sm">
+                        No moves yet
+                    </div>
+                </div>
+            {% endcall %}
+
+        </div>
+    </div>
+</div>
+
+<!-- ===== GAME OVER MODAL ===== -->
+<div id="game-over-overlay" class="game-over-overlay">
+    <div class="game-over-content">
+        <h2 id="game-over-title" class="game-over-title"></h2>
+        <p id="game-over-message" class="text-xl mb-6"></p>
+        <div class="space-y-4">
+            <button id="btn-play-again" class="neon-button w-full">
+                PLAY AGAIN
+            </button>
+            <a href="/configure" class="neon-button w-full block">
+                NEW CONFIGURATION
+            </a>
         </div>
     </div>
 </div>
 {% endblock %}
 
-{% block scripts %}
-<script src="{{ url_for('static', filename='js/game.js') }}"></script>
+{% block extra_scripts %}
+<!-- ============================================ -->
+<!-- JAVASCRIPT INTÉGRÉ - MOTEUR DE JEU -->
+<!-- ============================================ -->
+<script>
+console.log('🎮 GAME ENGINE LOADING...');
+
+// ===== CONFIGURATION =====
+const GameConfig = {
+    boardSize: parseInt(localStorage.getItem('boardSize') || '3'),
+    gameMode: localStorage.getItem('gameMode') || 'operator_vs_ai',
+    aiDifficulty: localStorage.getItem('aiDifficulty') || 'easy',
+    
+    getWinLength() {
+        return this.boardSize === 3 ? 3 : 4;
+    }
+};
+
+console.log('📋 Config:', GameConfig);
+
+// ===== STATE MANAGEMENT =====
+const GameState = {
+    board: [],
+    currentPlayer: 'X',
+    moveCount: 0,
+    gameOver: false,
+    winner: null,
+    winLine: null,
+    
+    init() {
+        const size = GameConfig.boardSize;
+        this.board = Array(size).fill(null).map(() => Array(size).fill(null));
+        this.currentPlayer = 'X';
+        this.moveCount = 0;
+        this.gameOver = false;
+        this.winner = null;
+        this.winLine = null;
+    },
+    
+    makeMove(row, col) {
+        if (this.gameOver || this.board[row][col] !== null) {
+            return false;
+        }
+        
+        this.board[row][col] = this.currentPlayer;
+        this.moveCount++;
+        
+        // Check win
+        const winResult = this.checkWin();
+        if (winResult) {
+            this.gameOver = true;
+            this.winner = this.currentPlayer;
+            this.winLine = winResult;
+            return true;
+        }
+        
+        // Check draw
+        if (this.isBoardFull()) {
+            this.gameOver = true;
+            return true;
+        }
+        
+        // Switch player
+        this.currentPlayer = this.currentPlayer === 'X' ? 'O' : 'X';
+        return true;
+    },
+    
+    checkWin() {
+        const size = GameConfig.boardSize;
+        const winLen = GameConfig.getWinLength();
+        const player = this.currentPlayer;
+        
+        // Check rows
+        for (let r = 0; r < size; r++) {
+            for (let c = 0; c <= size - winLen; c++) {
+                let win = true;
+                for (let i = 0; i < winLen; i++) {
+                    if (this.board[r][c + i] !== player) {
+                        win = false;
+                        break;
+                    }
+                }
+                if (win) {
+                    return Array(winLen).fill(0).map((_, i) => ({ row: r, col: c + i }));
+                }
+            }
+        }
+        
+        // Check columns
+        for (let c = 0; c < size; c++) {
+            for (let r = 0; r <= size - winLen; r++) {
+                let win = true;
+                for (let i = 0; i < winLen; i++) {
+                    if (this.board[r + i][c] !== player) {
+                        win = false;
+                        break;
+                    }
+                }
+                if (win) {
+                    return Array(winLen).fill(0).map((_, i) => ({ row: r + i, col: c }));
+                }
+            }
+        }
+        
+        // Check diagonals ↘
+        for (let r = 0; r <= size - winLen; r++) {
+            for (let c = 0; c <= size - winLen; c++) {
+                let win = true;
+                for (let i = 0; i < winLen; i++) {
+                    if (this.board[r + i][c + i] !== player) {
+                        win = false;
+                        break;
+                    }
+                }
+                if (win) {
+                    return Array(winLen).fill(0).map((_, i) => ({ row: r + i, col: c + i }));
+                }
+            }
+        }
+        
+        // Check diagonals ↙
+        for (let r = winLen - 1; r < size; r++) {
+            for (let c = 0; c <= size - winLen; c++) {
+                let win = true;
+                for (let i = 0; i < winLen; i++) {
+                    if (this.board[r - i][c + i] !== player) {
+                        win = false;
+                        break;
+                    }
+                }
+                if (win) {
+                    return Array(winLen).fill(0).map((_, i) => ({ row: r - i, col: c + i }));
+                }
+            }
+        }
+        
+        return null;
+    },
+    
+    isBoardFull() {
+        return this.board.every(row => row.every(cell => cell !== null));
+    }
+};
+
+// ===== UI MANAGEMENT =====
+const UI = {
+    createBoard() {
+        const board = document.getElementById('game-board');
+        if (!board) {
+            console.error('❌ Board container not found!');
+            return;
+        }
+        
+        const size = GameConfig.boardSize;
+        board.className = `game-grid size-${size}`;
+        board.innerHTML = '';
+        
+        for (let row = 0; row < size; row++) {
+            for (let col = 0; col < size; col++) {
+                const cell = document.createElement('div');
+                cell.className = 'grid-cell';
+                cell.dataset.row = row;
+                cell.dataset.col = col;
+                
+                cell.addEventListener('click', () => this.handleCellClick(row, col));
+                
+                board.appendChild(cell);
+            }
+        }
+        
+        console.log(`✅ Game board created: ${size}×${size}`);
+    },
+    
+    handleCellClick(row, col) {
+        if (GameState.gameOver || GameState.board[row][col] !== null) {
+            return;
+        }
+        
+        const success = GameState.makeMove(row, col);
+        if (success) {
+            this.updateCell(row, col, GameState.board[row][col]);
+            this.updateStatus();
+            this.addToMoveHistory(row, col, GameState.board[row][col]);
+            
+            if (GameState.gameOver) {
+                setTimeout(() => this.showGameOver(), 500);
+            } else if (GameConfig.gameMode === 'operator_vs_ai' && GameState.currentPlayer === 'O') {
+                setTimeout(() => this.makeAIMove(), 500);
+            }
+        }
+    },
+    
+    updateCell(row, col, player) {
+        const cell = document.querySelector(`.grid-cell[data-row="${row}"][data-col="${col}"]`);
+        if (cell) {
+            cell.innerHTML = `<span class="cell-symbol player-${player.toLowerCase()}">${player}</span>`;
+            cell.classList.add('occupied');
+        }
+    },
+    
+    updateStatus() {
+        const statusEl = document.getElementById('game-status');
+        const movesEl = document.getElementById('info-moves');
+        
+        if (movesEl) movesEl.textContent = GameState.moveCount;
+        
+        if (GameState.gameOver) {
+            if (GameState.winner) {
+                statusEl.innerHTML = `<span class="text-green-400">●</span> ${GameState.winner} WINS!`;
+                
+                // Highlight win cells
+                if (GameState.winLine) {
+                    GameState.winLine.forEach(pos => {
+                        const cell = document.querySelector(`.grid-cell[data-row="${pos.row}"][data-col="${pos.col}"]`);
+                        if (cell) cell.classList.add('win-cell');
+                    });
+                }
+            } else {
+                statusEl.innerHTML = `<span class="text-purple-400">●</span> DRAW - STALEMATE`;
+            }
+        } else {
+            const playerColor = GameState.currentPlayer === 'X' ? 'cyan' : 'red';
+            statusEl.innerHTML = `<span class="text-${playerColor}-400">●</span> ${GameState.currentPlayer} TO MOVE`;
+        }
+        
+        // Update status panels
+        this.updateStatusPanels();
+    },
+    
+    updateStatusPanels() {
+        const opPanel = document.getElementById('status-operator');
+        const sysPanel = document.getElementById('status-system');
+        
+        if (GameState.currentPlayer === 'X') {
+            opPanel.className = 'status-indicator active';
+            opPanel.querySelector('.text-sm').innerHTML = '● ACTIVE';
+            sysPanel.className = 'status-indicator waiting';
+            sysPanel.querySelector('.text-sm').innerHTML = '○ WAITING';
+        } else {
+            opPanel.className = 'status-indicator waiting';
+            opPanel.querySelector('.text-sm').innerHTML = '○ WAITING';
+            sysPanel.className = 'status-indicator active';
+            sysPanel.querySelector('.text-sm').innerHTML = '● ACTIVE';
+        }
+    },
+    
+    addToMoveHistory(row, col, player) {
+        const historyEl = document.getElementById('move-history');
+        if (!historyEl) return;
+        
+        if (GameState.moveCount === 1) {
+            historyEl.innerHTML = '';
+        }
+        
+        const moveItem = document.createElement('div');
+        moveItem.className = 'move-item';
+        moveItem.innerHTML = `
+            <span class="text-gray-400">Move ${GameState.moveCount}:</span>
+            <span class="text-${player === 'X' ? 'cyan' : 'red'}-400">${player}</span>
+            → (${row}, ${col})
+        `;
+        
+        historyEl.insertBefore(moveItem, historyEl.firstChild);
+    },
+    
+    makeAIMove() {
+        const emptyCells = [];
+        const size = GameConfig.boardSize;
+        
+        for (let r = 0; r < size; r++) {
+            for (let c = 0; c < size; c++) {
+                if (GameState.board[r][c] === null) {
+                    emptyCells.push({ row: r, col: c });
+                }
+            }
+        }
+        
+        if (emptyCells.length > 0) {
+            const move = emptyCells[Math.floor(Math.random() * emptyCells.length)];
+            this.handleCellClick(move.row, move.col);
+        }
+    },
+    
+    showGameOver() {
+        const overlay = document.getElementById('game-over-overlay');
+        const title = document.getElementById('game-over-title');
+        const message = document.getElementById('game-over-message');
+        
+        if (GameState.winner) {
+            if (GameState.winner === 'X') {
+                title.textContent = 'BREACH SUCCESSFUL';
+                title.className = 'game-over-title victory';
+                message.textContent = 'Operator dominates the system';
+            } else {
+                title.textContent = 'SYSTEM DEFENSE';
+                title.className = 'game-over-title defeat';
+                message.textContent = 'AI maintains control';
+            }
+        } else {
+            title.textContent = 'STALEMATE';
+            title.className = 'game-over-title draw';
+            message.textContent = 'Gridlock - No clear victor';
+        }
+        
+        overlay.classList.add('active');
+    },
+    
+    reset() {
+        GameState.init();
+        this.createBoard();
+        this.updateStatus();
+        
+        const historyEl = document.getElementById('move-history');
+        if (historyEl) {
+            historyEl.innerHTML = '<div class="text-center text-gray-500 text-sm">No moves yet</div>';
+        }
+        
+        const overlay = document.getElementById('game-over-overlay');
+        overlay.classList.remove('active');
+    }
+};
+
+// ===== INITIALIZATION =====
+document.addEventListener('DOMContentLoaded', () => {
+    console.log('🚀 DOM LOADED - Initializing game...');
+    
+    // Update info panel
+    document.getElementById('info-grid-size').textContent = `${GameConfig.boardSize}×${GameConfig.boardSize}`;
+    document.getElementById('info-mode').textContent = GameConfig.gameMode === 'operator_vs_ai' ? 'vs AI' : 'vs OPERATOR';
+    document.getElementById('info-difficulty').textContent = GameConfig.aiDifficulty.toUpperCase();
+    
+    // Initialize game
+    GameState.init();
+    UI.createBoard();
+    UI.updateStatus();
+    
+    // Button handlers
+    document.getElementById('btn-reset').addEventListener('click', () => {
+        if (confirm('Reset the grid? All progress will be lost.')) {
+            UI.reset();
+        }
+    });
+    
+    document.getElementById('btn-play-again').addEventListener('click', () => {
+        UI.reset();
+    });
+    
+    console.log('✅ GAME ENGINE READY');
+});
+
+// ===== FALLBACK: Si la grille n'est pas créée après 2 secondes =====
+setTimeout(() => {
+    const board = document.getElementById('game-board');
+    if (board && board.children.length === 0) {
+        console.warn('⚠️ Creating fallback grid...');
+        UI.createBoard();
+    }
+}, 2000);
+</script>
+
+<!-- Charge ui.js si disponible (optionnel) -->
+<script src="{{ url_for('static', filename='js/ui.js') }}" onerror="console.log('ui.js not found - using fallback')"></script>
 {% endblock %}
