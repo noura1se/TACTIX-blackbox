@@ -5,7 +5,7 @@
 
 // ===== TOAST NOTIFICATIONS =====
 
-const Toast = {
+window.Toast = window.Toast || {
     container: null,
     
     init() {
@@ -88,7 +88,7 @@ const Toast = {
 
 // ===== TERMINAL LOGGER =====
 
-const Terminal = {
+window.Terminal = window.Terminal || {
     logs: [],
     maxLogs: 100,
     
@@ -118,8 +118,8 @@ const Terminal = {
 };
 
 // ===== AUDIO EFFECTS =====
-
-const Audio = {
+ 
+window.Audio = window.Audio || {
     sounds: {},
     enabled: true,
     
@@ -157,7 +157,7 @@ const Audio = {
 
 // ===== MODAL UTILITY =====
 
-const Modal = {
+window.Modal = window.Modal || {
     show(content, options = {}) {
         const {
             title = '',
@@ -232,7 +232,7 @@ const Modal = {
 
 // ===== LOADING INDICATOR =====
 
-const Loading = {
+window.Loading = window.Loading || {
     show(target, text = 'LOADING...') {
         const element = typeof target === 'string' ? document.querySelector(target) : target;
         if (!element) return;
@@ -266,7 +266,7 @@ const Loading = {
 
 // ===== CONFETTI EFFECT =====
 
-const Confetti = {
+window.Confetti = window.Confetti || {
     create(count = 50) {
         const colors = ['#00f6ff', '#ff006e', '#b833ff', '#00ff9f', '#ff3366'];
         const container = document.createElement('div');
@@ -293,7 +293,7 @@ const Confetti = {
 
 // ===== UTILITY FUNCTIONS =====
 
-const Utils = {
+window.Utils = window.Utils || {
     debounce(func, wait) {
         let timeout;
         return function executedFunction(...args) {

@@ -15,15 +15,51 @@ const GameState = {
     moveHistory: [],
     moveCount: 0,
     
-    init(config) {
+    async init(config) {
         this.boardSize = config.boardSize || 3;
         this.gameMode = config.gameMode || 'operator_vs_ai';
         this.aiDifficulty = config.aiDifficulty || 'easy';
-        this.reset();
+        
+        // Fetch state from backend
+        await this.fetchStateFromBackend();
+    },
+    
+    async fetchStateFromBackend() {
+        try {
+            const response = await fetch('/api/state', {
+                method: 'GET',
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            });
+            
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            
+            const data = await response.json();
+            
+            // Update state from backend
+            this.boardSize = data.grid_size;
+            this.board = data.board;
+            this.currentPlayer = data.current_player === 'OPERATOR' ? 'X' : 'O';
+            this.gameOver = data.game_over;
+            this.moveCount = data.move_count;
+            
+            Terminal.log('Game state loaded from backend', 'success');
+            
+        } catch (error) {
+            console.error('Failed to fetch game state:', error);
+            Terminal.log('Failed to load game state - using defaults', 'error');
+            Toast.error('Failed to load game state');
+            
+            // Fallback to reset
+            this.reset();
+        }
     },
     
     reset() {
-        this.board = Array(this.boardSize).fill(null).map(() => Array(this.boardSize).fill(null));
+        this.board = Array(this.boardSize).fill(null).map(() => Array(this.boardSize).fill(''));
         this.currentPlayer = 'X';
         this.gameOver = false;
         this.winner = null;
@@ -31,33 +67,45 @@ const GameState = {
         this.moveCount = 0;
     },
     
-    makeMove(row, col) {
-        if (this.gameOver || this.board[row][col] !== null) {
+    async makeMove(row, col) {
+        if (this.gameOver || this.board[row][col] !== '' && this.board[row][col] !== null) {
             return { success: false, message: 'Invalid move' };
         }
         
-        this.board[row][col] = this.currentPlayer;
-        this.moveCount++;
-        this.moveHistory.push({ row, col, player: this.currentPlayer });
-        
-        // Check win
-        const winResult = this.checkWin();
-        if (winResult.winner) {
-            this.gameOver = true;
-            this.winner = winResult.winner;
-            return { success: true, gameOver: true, winner: winResult.winner, winLine: winResult.line };
+        try {
+            // Send move to backend
+            const response = await fetch('/api/move', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ row, col })
+            });
+            
+            if (!response.ok) {
+                throw new Error('Move failed');
+            }
+            
+            const result = await response.json();
+            
+            // Update local state from backend response
+            this.board = result.board;
+            this.currentPlayer = result.current_player === 'OPERATOR' ? 'X' : 'O';
+            this.gameOver = result.game_over || false;
+            this.winner = result.winner || null;
+            this.moveCount = result.move_count || this.moveCount + 1;
+            
+            return {
+                success: true,
+                gameOver: this.gameOver,
+                winner: this.winner,
+                draw: result.draw || false
+            };
+            
+        } catch (error) {
+            console.error('Move error:', error);
+            return { success: false, message: 'Move failed' };
         }
-        
-        // Check draw
-        if (this.isBoardFull()) {
-            this.gameOver = true;
-            return { success: true, gameOver: true, draw: true };
-        }
-        
-        // Switch player
-        this.currentPlayer = this.currentPlayer === 'X' ? 'O' : 'X';
-        
-        return { success: true, gameOver: false };
     },
     
     checkWin() {
@@ -160,14 +208,14 @@ const GameState = {
     },
     
     isBoardFull() {
-        return this.board.every(row => row.every(cell => cell !== null));
+        return this.board.every(row => row.every(cell => cell !== '' && cell !== null));
     },
     
     getEmptyCells() {
         const empty = [];
         for (let row = 0; row < this.boardSize; row++) {
             for (let col = 0; col < this.boardSize; col++) {
-                if (this.board[row][col] === null) {
+                if (this.board[row][col] === '' || this.board[row][col] === null) {
                     empty.push({ row, col });
                 }
             }
@@ -181,7 +229,10 @@ const GameState = {
 const UI = {
     createBoard() {
         const board = document.getElementById('game-board');
-        if (!board) return;
+        if (!board) {
+            console.error('ERROR: #game-board element not found!');
+            return;
+        }
         
         board.innerHTML = '';
         board.className = `game-grid size-${GameState.boardSize}`;
@@ -200,9 +251,24 @@ const UI = {
         Terminal.log(`Game board created: ${GameState.boardSize}×${GameState.boardSize}`, 'success');
     },
     
+    renderBoard() {
+        // Render the current board state
+        for (let row = 0; row < GameState.boardSize; row++) {
+            for (let col = 0; col < GameState.boardSize; col++) {
+                const value = GameState.board[row][col];
+                if (value && value !== '') {
+                    this.updateCell(row, col, value);
+                }
+            }
+        }
+    },
+    
     updateCell(row, col, player) {
         const cell = document.querySelector(`.grid-cell[data-row="${row}"][data-col="${col}"]`);
         if (!cell) return;
+        
+        // Clear existing content
+        cell.innerHTML = '';
         
         const symbol = document.createElement('span');
         symbol.className = `cell-symbol player-${player.toLowerCase()}`;
@@ -332,17 +398,18 @@ async function handleCellClick(row, col) {
     }
     
     // Attempt move
-    const result = GameState.makeMove(row, col);
+    const result = await GameState.makeMove(row, col);
     
     if (!result.success) {
         Toast.error(result.message || 'Invalid move');
         return;
     }
     
-    // Update UI
-    const player = GameState.currentPlayer === 'X' ? 'O' : 'X'; // Previous player
-    UI.updateCell(row, col, player);
+    // Update UI - render entire board from backend state
+    UI.renderBoard();
     UI.updateStatus();
+    
+    const player = GameState.currentPlayer === 'X' ? 'O' : 'X'; // Previous player
     UI.addToMoveHistory(row, col, player);
     UI.addTerminalMessage(`${player} placed at [${row}, ${col}]`, 'info');
     
@@ -369,10 +436,10 @@ async function makeAIMove() {
     const randomCell = emptyCells[Math.floor(Math.random() * emptyCells.length)];
     const { row, col } = randomCell;
     
-    const result = GameState.makeMove(row, col);
+    const result = await GameState.makeMove(row, col);
     
     if (result.success) {
-        UI.updateCell(row, col, 'O');
+        UI.renderBoard();
         UI.updateStatus();
         UI.addToMoveHistory(row, col, 'O');
         UI.addTerminalMessage(`AI placed at [${row}, ${col}]`, 'success');
@@ -448,40 +515,12 @@ function showGameOverModal(winner, message) {
 }
 
 function undoMove() {
-    if (GameState.moveHistory.length === 0) {
-        Toast.warning('No moves to undo');
-        return;
-    }
-    
-    // Undo last move (or two if against AI)
-    const movesToUndo = GameState.gameMode === 'operator_vs_ai' ? 2 : 1;
-    
-    for (let i = 0; i < movesToUndo && GameState.moveHistory.length > 0; i++) {
-        const lastMove = GameState.moveHistory.pop();
-        GameState.board[lastMove.row][lastMove.col] = null;
-        GameState.moveCount--;
-        
-        // Clear cell UI
-        const cell = document.querySelector(`.grid-cell[data-row="${lastMove.row}"][data-col="${lastMove.col}"]`);
-        if (cell) cell.innerHTML = '';
-    }
-    
-    // Switch player back
-    GameState.currentPlayer = GameState.currentPlayer === 'X' ? 'O' : 'X';
-    GameState.gameOver = false;
-    GameState.winner = null;
-    
-    UI.updateStatus();
-    UI.addTerminalMessage('Move undone', 'warning');
-    Toast.info('Move undone');
+    Toast.warning('Undo not yet implemented');
 }
 
 function runExploitScan() {
     UI.addTerminalMessage('Running exploit scan...', 'system');
     Toast.info('Scanning for threats...');
-    
-    // Simple threat detection: check if opponent has 2-in-a-row
-    // This is a placeholder - real implementation would be more sophisticated
     
     setTimeout(() => {
         UI.addTerminalMessage('Scan complete - No critical threats', 'success');
@@ -490,52 +529,18 @@ function runExploitScan() {
 }
 
 function confirmNewGame() {
-    if (GameState.moveCount === 0) {
-        startNewGame();
-        return;
-    }
-    
-    const content = `
-        <div class="text-center py-4">
-            <p class="text-gray-300 mb-6">Current game will be lost. Continue?</p>
-            <div class="flex gap-4 justify-center">
-                <button onclick="startNewGame(); Modal.closeAll();" class="neon-button" style="border-color: #ff3366; color: #ff3366;">
-                    CONFIRM
-                </button>
-                <button onclick="Modal.closeAll();" class="neon-button" style="border-color: #9ca3af; color: #9ca3af;">
-                    CANCEL
-                </button>
-            </div>
-        </div>
-    `;
-    
-    Modal.show(content, { title: 'CONFIRM NEW BREACH' });
+    window.location.href = '/configure';
 }
 
-function startNewGame() {
-    GameState.reset();
-    UI.createBoard();
-    UI.updateStatus();
-    
-    // Clear move history
-    const historyEl = document.getElementById('move-history');
-    if (historyEl) {
-        historyEl.innerHTML = '<p class="text-sm text-gray-500 font-mono text-center py-4">No moves yet</p>';
-    }
-    
-    // Clear terminal
-    const terminalEl = document.getElementById('game-terminal');
-    if (terminalEl) {
-        terminalEl.innerHTML = '';
-    }
-    
-    UI.addTerminalMessage('New breach initiated', 'breach');
-    Toast.success('New game started');
+async function startNewGame() {
+    window.location.href = '/configure';
 }
 
 // ===== INITIALIZATION =====
 
-document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener('DOMContentLoaded', async () => {
+    Terminal.log('DOM LOADED - Initializing game...', 'system');
+    
     // Get configuration from URL params or localStorage
     const urlParams = new URLSearchParams(window.location.search);
     const savedConfig = localStorage.getItem('gameConfig');
@@ -549,27 +554,40 @@ document.addEventListener('DOMContentLoaded', () => {
                      (savedConfig ? JSON.parse(savedConfig).ai_difficulty : 'easy')
     };
     
-    // Initialize game
-    GameState.init(config);
+    // Initialize game - THIS NOW FETCHES FROM BACKEND
+    await GameState.init(config);
     
-    // Create board
+    // Create board UI
     UI.createBoard();
     
+    // Render current board state
+    UI.renderBoard();
+    
     // Update UI labels
-    document.getElementById('grid-size-display').textContent = `${config.boardSize}×${config.boardSize}`;
-    document.getElementById('game-mode-display').textContent = 
-        config.gameMode === 'operator_vs_ai' ? 'VS AI' : 'VS PLAYER';
+    const gridSizeDisplay = document.getElementById('grid-size-display');
+    if (gridSizeDisplay) {
+        gridSizeDisplay.textContent = `${GameState.boardSize}×${GameState.boardSize}`;
+    }
+    
+    const gameModeDisplay = document.getElementById('game-mode-display');
+    if (gameModeDisplay) {
+        gameModeDisplay.textContent = config.gameMode === 'operator_vs_ai' ? 'VS AI' : 'VS PLAYER';
+    }
     
     if (config.gameMode === 'operator_vs_operator') {
-        document.getElementById('player-o-label').textContent = 'OPERATOR 2 (O)';
+        const playerOLabel = document.getElementById('player-o-label');
+        if (playerOLabel) {
+            playerOLabel.textContent = 'OPERATOR 2 (O)';
+        }
     }
     
     // Initial status
     UI.updateStatus();
     UI.addTerminalMessage('Breach protocol active', 'breach');
-    UI.addTerminalMessage(`Grid: ${config.boardSize}×${config.boardSize}`, 'info');
+    UI.addTerminalMessage(`Grid: ${GameState.boardSize}×${GameState.boardSize}`, 'info');
     UI.addTerminalMessage(`Mode: ${config.gameMode}`, 'info');
     
+    Terminal.log('GAME ENGINE READY', 'success');
     console.log('%cGAME ENGINE LOADED', 'color: #00f6ff; font-weight: bold;');
     console.log('Config:', config);
 });

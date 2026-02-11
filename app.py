@@ -131,7 +131,7 @@ def stats():
     return render_template('stats.html')
 
 # API Endpoints
-@app.route('/api/new_game', methods=['POST'])
+@app.route('/api/new', methods=['POST'])
 def new_game():
     data = request.json
     game = BlackboxGame(
@@ -205,7 +205,7 @@ def system_move():
     
     return jsonify({'error': 'No empty cells'}), 400
 
-@app.route('/api/game_state', methods=['GET'])
+@app.route('/api/state', methods=['GET'])
 def get_game_state():
     game_id = session.get('current_game')
     if not game_id or game_id not in games:

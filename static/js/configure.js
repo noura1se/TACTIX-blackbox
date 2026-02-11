@@ -144,7 +144,7 @@ function updateSummary() {
 
 // ===== FORM SUBMISSION =====
 
-function handleFormSubmit(e) {
+async function handleFormSubmit(e) {
     e.preventDefault();
     
     // Validate configuration
@@ -153,16 +153,6 @@ function handleFormSubmit(e) {
         return;
     }
     
-    // Prepare configuration data
-    const config = {
-        board_size: ConfigState.boardSize,
-        game_mode: ConfigState.gameMode,
-        ai_difficulty: ConfigState.gameMode === 'operator_vs_ai' ? ConfigState.aiDifficulty : null
-    };
-    
-    // Store in localStorage for game page
-    localStorage.setItem('gameConfig', JSON.stringify(config));
-    
     // Log
     Terminal.log('Configuration saved', 'success');
     Terminal.log('Initiating breach...', 'breach');
@@ -170,11 +160,45 @@ function handleFormSubmit(e) {
     // Show loading
     Loading.show('#configForm', 'INITIALIZING BREACH...');
     
-    // Redirect to game page after brief delay
-    setTimeout(() => {
-        const params = new URLSearchParams(config);
-        window.location.href = `/game?${params.toString()}`;
-    }, 1500);
+    try {
+        // Call the backend API to create the game
+        const response = await fetch('/api/new', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                grid_size: ConfigState.boardSize,  // ← This matches your Python: data.get('grid_size', 3)
+                mode: ConfigState.gameMode.toUpperCase().replace('_', ' '),  // ← Matches: data.get('mode', 'OPERATOR vs SYSTEM')
+                difficulty: ConfigState.gameMode === 'operator_vs_ai' 
+                    ? ConfigState.aiDifficulty.toUpperCase() 
+                    : 'MEDIUM'  // ← Matches: data.get('difficulty', 'MEDIUM')
+            })
+        });
+        
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        
+        const data = await response.json();
+        
+        if (data.status === 'created') {
+            Terminal.log(`Game created: ${data.game_id}`, 'success');
+            
+            // Redirect to game page
+            setTimeout(() => {
+                window.location.href = '/game';
+            }, 800);
+        } else {
+            throw new Error('Game creation failed');
+        }
+        
+    } catch (error) {
+        console.error('Error creating game:', error);
+        Terminal.log('Breach initialization failed', 'error');
+        Toast.error('Failed to create game. Please try again.');
+        Loading.hide('#configForm');
+    }
 }
 
 // ===== KEYBOARD SHORTCUTS =====
