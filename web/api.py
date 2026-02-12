@@ -165,7 +165,7 @@ def api_move():
 
     has, msg = _ensure_match()
     if not has:
-        return _json_err(msg, 404)
+        return _json_err(msg, 404) 
 
     body = request.get_json(silent=True) or {}
     pos = body.get("pos", None)
@@ -186,7 +186,7 @@ def api_move():
 
         # AI reply
         if mode == MODE_VS_SYSTEM and status["state"] == "ONGOING":
-            ai_pos, ai_meta = choose_ai_move(STATE, CONFIG)
+            ai_pos, ai_meta = choose_ai_move(STATE, CONFIG, difficulty=str(difficulty))
             if ai_pos is not None:
                 STATE = apply_move(STATE, CONFIG, HISTORY, int(ai_pos))
                 status = check_status(STATE)

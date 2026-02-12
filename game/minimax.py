@@ -1,4 +1,3 @@
-# game/minimax.py
 from __future__ import annotations
 
 from dataclasses import dataclass
@@ -26,6 +25,24 @@ class SearchResult:
 
 
 MATE = 10_000_000
+
+
+# ========================================
+# ✅ PROPER FIX: Use MATE instead of infinity
+# ========================================
+def safe_int(value: float) -> int:
+    """
+    Safely convert float to int, handling infinity.
+    
+    This should rarely be needed if alpha/beta are initialized correctly,
+    but it's kept as a safety net.
+    """
+    if value == math.inf:
+        return MATE
+    elif value == -math.inf:
+        return -MATE
+    else:
+        return int(value)
 
 
 # ----------------------------
@@ -108,6 +125,8 @@ def search_best_move(
     """
     Returns best move for current player ("X" or "O").
     Uses alpha-beta pruning + transposition table + move ordering from scan().
+    
+    ✅ KEY FIX: Initialize alpha/beta with MATE, not math.inf
     """
     start = time.time()
     deadline = (start + (time_limit_ms / 1000.0)) if time_limit_ms else None
@@ -127,10 +146,10 @@ def search_best_move(
         moves = _order_moves(moves, s)
 
     best_move = moves[0]
-    best_score = -math.inf
+    best_score = -MATE  # ✅ FIX: Use MATE instead of -math.inf
 
-    alpha = -math.inf
-    beta = math.inf
+    alpha = -MATE  # ✅ FIX: Use MATE instead of -math.inf
+    beta = MATE    # ✅ FIX: Use MATE instead of math.inf
 
     for m in moves:
         if deadline and time.time() > deadline:
@@ -149,7 +168,13 @@ def search_best_move(
 
         alpha = max(alpha, best_score)
 
-    return SearchResult(move=best_move, score=int(best_score), depth=depth, nodes=nodes, cutoffs=cutoffs)
+    return SearchResult(
+        move=best_move, 
+        score=best_score,  # ✅ Already an int, no conversion needed
+        depth=depth, 
+        nodes=nodes, 
+        cutoffs=cutoffs
+    )
 
 
 def _apply_move_state(state: GameState, config: GameConfig, move: Move, player: Player) -> GameState:
@@ -172,44 +197,59 @@ def _apply_move_state(state: GameState, config: GameConfig, move: Move, player: 
     return s2
 
 
+# ========================================
+# ✅ COMPLETE FIX: Terminal detection + MATE initialization
+# ========================================
 def _max_value(
     state: GameState,
     config: GameConfig,
     depth: int,
-    alpha: float,
-    beta: float,
+    alpha: int,  # ✅ Changed type hint: int instead of float
+    beta: int,   # ✅ Changed type hint: int instead of float
     perspective_player: Player,
     tt: Dict[str, Tuple[int, int]],
     deadline: Optional[float],
 ) -> Tuple[int, int, int]:
     """
     Returns (score, nodes, cutoffs)
+    
+    ✅ FIXES:
+    1. Use state.winner directly (no recalculation)
+    2. Initialize v with -MATE (not -math.inf)
+    3. All alpha/beta operations use int (MATE)
     """
     if deadline and time.time() > deadline:
         return evaluate(state, config, perspective_player), 0, 0
 
+    # ✅ FIX 1: Check state.winner directly
+    if state.winner is not None:
+        if state.winner == perspective_player:
+            return MATE + depth, 0, 0  # Good for us
+        else:
+            return -MATE - depth, 0, 0  # Bad for us
+
+    if state.is_draw or depth == 0:
+        return evaluate(state, config, perspective_player), 0, 0
+
     p = current_player(state)
-    opp = opponent(p)
-
-    # terminal: if previous move won for opp, bad for max
-    if is_win(state, config, opp):
-        return int(-MATE - depth), 0, 0
-
-    if is_draw(state, config) or depth == 0:
-        return int(evaluate(state, config, perspective_player)), 0, 0
 
     key = position_key(state)
     if key in tt:
         d0, v0 = tt[key]
         if d0 >= depth:
-            return int(v0), 0, 0
+            return v0, 0, 0
 
     moves = legal_moves(state)
+    
+    # ✅ Edge case: No legal moves (shouldn't happen if terminal check is correct)
+    if not moves:
+        return evaluate(state, config, perspective_player), 0, 0
+    
     if depth <= 2:
         s = scan(state, config)
         moves = _order_moves(moves, s)
 
-    v = -math.inf
+    v = -MATE  # ✅ FIX 2: Use -MATE instead of -math.inf
     nodes = 0
     cutoffs = 0
 
@@ -223,53 +263,65 @@ def _max_value(
 
         v = max(v, score)
         if v >= beta:
-            tt[key] = (depth, int(v))
-            return int(v), nodes, cutoffs + 1
+            tt[key] = (depth, v)
+            return v, nodes, cutoffs + 1
 
         alpha = max(alpha, v)
 
-    tt[key] = (depth, int(v))
-    return int(v), nodes, cutoffs
+    tt[key] = (depth, v)
+    return v, nodes, cutoffs
 
 
 def _min_value(
     state: GameState,
     config: GameConfig,
     depth: int,
-    alpha: float,
-    beta: float,
+    alpha: int,  # ✅ Changed type hint: int instead of float
+    beta: int,   # ✅ Changed type hint: int instead of float
     perspective_player: Player,
     tt: Dict[str, Tuple[int, int]],
     deadline: Optional[float],
 ) -> Tuple[int, int, int]:
     """
     Returns (score, nodes, cutoffs)
+    
+    ✅ FIXES:
+    1. Use state.winner directly (no recalculation)
+    2. Initialize v with MATE (not math.inf)
+    3. All alpha/beta operations use int (MATE)
     """
     if deadline and time.time() > deadline:
         return evaluate(state, config, perspective_player), 0, 0
 
+    # ✅ FIX 1: Check state.winner directly
+    if state.winner is not None:
+        if state.winner == perspective_player:
+            return MATE + depth, 0, 0  # Good for perspective player
+        else:
+            return -MATE - depth, 0, 0  # Bad for perspective player
+
+    if state.is_draw or depth == 0:
+        return evaluate(state, config, perspective_player), 0, 0
+
     p = current_player(state)
-    opp = opponent(p)
-
-    # terminal: if previous move won for opp, good for min? (from perspective of max player)
-    if is_win(state, config, opp):
-        return int(MATE + depth), 0, 0
-
-    if is_draw(state, config) or depth == 0:
-        return int(evaluate(state, config, perspective_player)), 0, 0
 
     key = position_key(state)
     if key in tt:
         d0, v0 = tt[key]
         if d0 >= depth:
-            return int(v0), 0, 0
+            return v0, 0, 0
 
     moves = legal_moves(state)
+    
+    # ✅ Edge case: No legal moves (shouldn't happen if terminal check is correct)
+    if not moves:
+        return evaluate(state, config, perspective_player), 0, 0
+    
     if depth <= 2:
         s = scan(state, config)
         moves = _order_moves(moves, s)
 
-    v = math.inf
+    v = MATE  # ✅ FIX 2: Use MATE instead of math.inf
     nodes = 0
     cutoffs = 0
 
@@ -283,13 +335,13 @@ def _min_value(
 
         v = min(v, score)
         if v <= alpha:
-            tt[key] = (depth, int(v))
-            return int(v), nodes, cutoffs + 1
+            tt[key] = (depth, v)
+            return v, nodes, cutoffs + 1
 
         beta = min(beta, v)
 
-    tt[key] = (depth, int(v))
-    return int(v), nodes, cutoffs
+    tt[key] = (depth, v)
+    return v, nodes, cutoffs
 
 
 def _order_moves(moves: List[Move], s) -> List[Move]:

@@ -8,6 +8,7 @@
 
 <div class="container mx-auto px-6 py-8 max-w-7xl">
     
+    <!-- Header -->
     <div class="text-center mb-12 animate-fadeInDown">
         <h1 class="font-display font-black text-5xl mb-4">
             <span class="text-neon-green animate-flicker">COMBAT</span>
@@ -18,6 +19,39 @@
             <span class="text-neon-green">◆</span> Performance Analysis Dashboard <span class="text-neon-green">◆</span>
         </p>
     </div>
+    
+    <!-- Operator Dominance vs System Resistance Bar -->
+    {% call neon_card(title='OPERATOR DOMINANCE // SYSTEM RESISTANCE', color='cyan', glow=true, class='mb-8') %}
+        <div class="py-6">
+            <!-- Progress Bar -->
+            <div class="relative h-12 bg-gray-900 rounded-lg overflow-hidden border-2 border-gray-800">
+                <!-- Operator (X) Progress -->
+                <div id="operator-progress" 
+                     class="absolute left-0 top-0 h-full bg-gradient-to-r from-neon-cyan to-cyan-400 transition-all duration-1000"
+                     style="width: 0%">
+                </div>
+                <!-- System (O) Progress -->
+                <div id="system-progress" 
+                     class="absolute right-0 top-0 h-full bg-gradient-to-l from-neon-pink to-pink-400 transition-all duration-1000"
+                     style="width: 0%">
+                </div>
+                
+                <!-- Center Label Only -->
+                <div class="absolute inset-0 flex items-center justify-center font-mono font-bold text-sm z-10">
+                    <div class="text-gray-300 text-xs">
+                        TOTAL GAMES: <span id="total-games-bar">0</span>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Win Counts -->
+            <div class="flex justify-between mt-4 font-mono text-xs text-gray-500">
+                <div>OPERATOR WINS: <span class="text-neon-cyan font-bold" id="operator-wins">0</span></div>
+                <div>DRAWS: <span class="text-neon-purple font-bold" id="total-draws">0</span></div>
+                <div>SYSTEM WINS: <span class="text-neon-pink font-bold" id="system-wins">0</span></div>
+            </div>
+        </div>
+    {% endcall %}
     
     <!-- Overview Cards -->
     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8 animate-fadeInUp">
@@ -36,10 +70,10 @@
             </div>
         {% endcall %}
         
-        {% call neon_card(title='AVG MOVES', color='purple', glow=true) %}
+        {% call neon_card(title='DRAW RATE', color='purple', glow=true) %}
             <div class="text-center py-4">
-                <div class="text-5xl font-display font-black text-neon-purple mb-2" id="avg-moves">0</div>
-                <div class="text-xs text-gray-500 font-mono uppercase">Per Game</div>
+                <div class="text-5xl font-display font-black text-neon-purple mb-2" id="draw-rate">0%</div>
+                <div class="text-xs text-gray-500 font-mono uppercase">Stalemate Rate</div>
             </div>
         {% endcall %}
         
@@ -56,14 +90,64 @@
     <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
         
         {% call neon_card(title='WIN RATE BY GRID SIZE', subtitle='Performance Analysis', color='cyan', glow=true, scanline=true) %}
-            <div class="h-80" id="grid-size-chart"></div>
+            <div class="h-80">
+                <canvas id="grid-size-chart"></canvas>
+            </div>
         {% endcall %}
         
-        {% call neon_card(title='GAME OUTCOMES', subtitle='Wins vs Losses vs Draws', color='purple', glow=true) %}
-            <div class="h-80" id="outcomes-chart"></div>
+        {% call neon_card(title='GAME OUTCOMES', subtitle='Wins vs Draws', color='purple', glow=true) %}
+            <div class="h-80">
+                <canvas id="outcomes-chart"></canvas>
+            </div>
         {% endcall %}
         
     </div>
+    
+    <!-- Stats by Difficulty and Mode -->
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
+        
+        {% call neon_card(title='PERFORMANCE BY DIFFICULTY', subtitle='Win Rate Analysis', color='green', glow=true) %}
+            <div class="space-y-4 py-4">
+                <div id="difficulty-stats">
+                    <!-- Populated by JavaScript -->
+                    <div class="text-center text-gray-500 py-8">Loading...</div>
+                </div>
+            </div>
+        {% endcall %}
+        
+        {% call neon_card(title='PERFORMANCE BY MODE', subtitle='Game Mode Analysis', color='pink', glow=true) %}
+            <div class="space-y-4 py-4">
+                <div id="mode-stats">
+                    <!-- Populated by JavaScript -->
+                    <div class="text-center text-gray-500 py-8">Loading...</div>
+                </div>
+            </div>
+        {% endcall %}
+        
+    </div>
+    
+    <!-- Grid Size Breakdown -->
+    {% call neon_card(title='GRID SIZE BREAKDOWN', subtitle='Detailed Stats by Board Size', color='cyan', glow=true, class='mb-8') %}
+        <div class="overflow-x-auto">
+            <table class="w-full font-mono text-sm">
+                <thead>
+                    <tr class="border-b border-neon-cyan/20">
+                        <th class="text-left py-3 px-4 text-neon-cyan uppercase text-xs">Grid Size</th>
+                        <th class="text-center py-3 px-4 text-neon-cyan uppercase text-xs">Games</th>
+                        <th class="text-center py-3 px-4 text-neon-cyan uppercase text-xs">Wins</th>
+                        <th class="text-center py-3 px-4 text-neon-cyan uppercase text-xs">Draws</th>
+                        <th class="text-center py-3 px-4 text-neon-cyan uppercase text-xs">Win Rate</th>
+                        <th class="text-center py-3 px-4 text-neon-cyan uppercase text-xs">Draw Rate</th>
+                    </tr>
+                </thead>
+                <tbody id="grid-breakdown-table">
+                    <tr>
+                        <td colspan="6" class="text-center py-8 text-gray-500">Loading...</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    {% endcall %}
     
     <!-- Recent Games -->
     {% call neon_card(title='RECENT BREACHES', subtitle='Latest 10 Games', color='green', glow=true, class='animate-fadeInUp animate-delay-200') %}
@@ -75,7 +159,7 @@
                         <th class="text-left py-3 px-4 text-neon-green uppercase text-xs">Grid</th>
                         <th class="text-left py-3 px-4 text-neon-green uppercase text-xs">Mode</th>
                         <th class="text-left py-3 px-4 text-neon-green uppercase text-xs">Difficulty</th>
-                        <th class="text-center py-3 px-4 text-neon-green uppercase text-xs">Moves</th>
+                        <th class="text-center py-3 px-4 text-neon-green uppercase text-xs">Winner</th>
                         <th class="text-center py-3 px-4 text-neon-green uppercase text-xs">Result</th>
                     </tr>
                 </thead>
@@ -92,8 +176,35 @@
     <div class="flex justify-center gap-4 mt-8">
         {{ ghost_button(text='New Breach', href='/configure', color='cyan') }}
         {{ ghost_button(text='Back to Home', href='/', color='purple') }}
+        <button id="reset-stats-btn" 
+                class="group relative px-8 py-3 font-mono font-bold uppercase tracking-wider text-sm transition-all duration-300 border-2 border-neon-pink text-neon-pink hover:bg-neon-pink hover:text-black hover:shadow-neon-pink">
+            <span class="relative z-10">Reset Stats</span>
+            <div class="absolute inset-0 bg-neon-pink opacity-0 group-hover:opacity-20 transition-opacity duration-300"></div>
+        </button>
     </div>
     
+</div>
+
+<!-- Confirmation Modal -->
+<div id="reset-confirmation-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm">
+    <div class="bg-gray-900 border-2 border-neon-pink rounded-lg p-8 max-w-md mx-4 shadow-neon-pink animate-fadeInUp">
+        <h2 class="font-display font-black text-2xl text-neon-pink mb-4">
+            ⚠️ CONFIRM RESET
+        </h2>
+        <p class="font-mono text-gray-300 mb-6">
+            This will permanently delete all combat statistics and game history. This action cannot be undone.
+        </p>
+        <div class="flex gap-4">
+            <button id="confirm-reset-btn" 
+                    class="flex-1 px-6 py-3 font-mono font-bold uppercase tracking-wider text-sm bg-neon-pink text-black hover:bg-pink-400 transition-all duration-300">
+                Confirm Reset
+            </button>
+            <button id="cancel-reset-btn" 
+                    class="flex-1 px-6 py-3 font-mono font-bold uppercase tracking-wider text-sm border-2 border-gray-600 text-gray-400 hover:border-gray-500 hover:text-gray-300 transition-all duration-300">
+                Cancel
+            </button>
+        </div>
+    </div>
 </div>
 
 {% endblock %}

@@ -1,6 +1,6 @@
 /**
  * TACTIX // BLACKBOX - UI Utilities
- * Helper functions for cyberpunk interface interactions
+ * MINIMAL VERSION - Keyboard removed to fix errors
  */
 
 // ===== TOAST NOTIFICATIONS =====
@@ -114,44 +114,6 @@ window.Terminal = window.Terminal || {
     
     getLogs() {
         return [...this.logs];
-    }
-};
-
-// ===== AUDIO EFFECTS =====
- 
-window.Audio = window.Audio || {
-    sounds: {},
-    enabled: true,
-    
-    init() {
-        // Preload sounds (URLs would be actual sound files)
-        this.sounds = {
-            click: new window.Audio('/static/audio/click.mp3'),
-            move: new window.Audio('/static/audio/move.mp3'),
-            win: new window.Audio('/static/audio/win.mp3'),
-            error: new window.Audio('/static/audio/error.mp3'),
-        };
-        
-        // Set volume
-        Object.values(this.sounds).forEach(sound => {
-            sound.volume = 0.3;
-        });
-    },
-    
-    play(soundName) {
-        if (!this.enabled || !this.sounds[soundName]) return;
-        
-        try {
-            const sound = this.sounds[soundName].cloneNode();
-            sound.play().catch(() => {});
-        } catch (e) {
-            // Silently fail if audio not available
-        }
-    },
-    
-    toggle() {
-        this.enabled = !this.enabled;
-        return this.enabled;
     }
 };
 
@@ -336,39 +298,13 @@ window.Utils = window.Utils || {
     }
 };
 
-// ===== KEYBOARD SHORTCUTS =====
-
-const Keyboard = {
-    shortcuts: {},
-    
-    register(key, callback, options = {}) {
-        const { ctrl = false, shift = false, alt = false } = options;
-        const id = `${ctrl ? 'ctrl+' : ''}${shift ? 'shift+' : ''}${alt ? 'alt+' : ''}${key}`;
-        this.shortcuts[id] = callback;
-    },
-    
-    init() {
-        document.addEventListener('keydown', (e) => {
-            const key = e.key.toLowerCase();
-            const id = `${e.ctrlKey ? 'ctrl+' : ''}${e.shiftKey ? 'shift+' : ''}${e.altKey ? 'alt+' : ''}${key}`;
-            
-            if (this.shortcuts[id]) {
-                e.preventDefault();
-                this.shortcuts[id](e);
-            }
-        });
-    }
-};
-
 // ===== INITIALIZATION =====
+// KEYBOARD COMPLETELY REMOVED - IT WAS CAUSING ERRORS!
 
 document.addEventListener('DOMContentLoaded', () => {
     // Initialize systems
     Toast.init();
-    Keyboard.init();
-    
-    // Register common shortcuts
-    Keyboard.register('escape', () => Modal.closeAll());
+    // Keyboard.init(); ← REMOVED - WAS CAUSING THE ERROR
     
     // Add ripple effect to buttons
     document.querySelectorAll('.neon-button').forEach(button => {
@@ -386,21 +322,11 @@ document.addEventListener('DOMContentLoaded', () => {
     setInterval(() => {
         const uptime = Math.floor((Date.now() - startTime) / 1000);
         const uptimeEl = document.querySelector('footer .terminal-cursor');
-        if (uptimeEl) {
+        if (uptimeEl && uptimeEl.previousSibling) {
             uptimeEl.previousSibling.textContent = `UPTIME: ${Utils.formatTime(uptime)} `;
         }
     }, 1000);
     
     console.log('%cTACTIX // BLACKBOX', 'color: #00f6ff; font-size: 24px; font-weight: bold;');
-    console.log('%cBREACH PROTOCOL v2.0 - INITIALIZED', 'color: #00ff9f; font-size: 14px;');
+    console.log('%cUI UTILITIES LOADED (Keyboard disabled)', 'color: #00ff9f; font-size: 14px;');
 });
-
-// Export to global scope
-window.Toast = Toast;
-window.Terminal = Terminal;
-window.Audio = Audio;
-window.Modal = Modal;
-window.Loading = Loading;
-window.Confetti = Confetti;
-window.Utils = Utils;
-window.Keyboard = Keyboard;

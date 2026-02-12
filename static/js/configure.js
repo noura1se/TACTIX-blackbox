@@ -100,7 +100,7 @@ function updateSummary() {
     const gameModeEl = document.getElementById('summaryGameMode');
     if (gameModeEl) {
         const modeLabels = {
-            'operator_vs_ai': 'Operator vs AI',
+            'operator_vs_ai': 'Operator vs System',
             'operator_vs_operator': 'Operator vs Operator'
         };
         gameModeEl.textContent = modeLabels[ConfigState.gameMode];
@@ -161,6 +161,24 @@ async function handleFormSubmit(e) {
     Loading.show('#configForm', 'INITIALIZING BREACH...');
     
     try {
+        // Map frontend mode names to backend API names
+        const modeMap = {
+            'operator_vs_ai': 'HUMAN_VS_AI',
+            'operator_vs_operator': 'HUMAN_VS_HUMAN'
+        };
+        
+        const difficultyMap = {
+            'easy': 'EASY',
+            'medium': 'MEDIUM',
+            'relentless': 'RELENTLESS'
+        };
+        
+        console.log('Sending configuration:', {
+            boardSize: ConfigState.boardSize,
+            mode: modeMap[ConfigState.gameMode],
+            difficulty: difficultyMap[ConfigState.aiDifficulty]
+        });
+        
         // Call the backend API to create the game
         const response = await fetch('/api/new', {
             method: 'POST',
@@ -168,39 +186,46 @@ async function handleFormSubmit(e) {
                 'Content-Type': 'application/json'
             },
             body: JSON.stringify({
-                grid_size: ConfigState.boardSize,  // ← This matches your Python: data.get('grid_size', 3)
-                mode: ConfigState.gameMode.toUpperCase().replace('_', ' '),  // ← Matches: data.get('mode', 'OPERATOR vs SYSTEM')
+                boardSize: ConfigState.boardSize,
+                mode: modeMap[ConfigState.gameMode] || 'HUMAN_VS_AI',
                 difficulty: ConfigState.gameMode === 'operator_vs_ai' 
-                    ? ConfigState.aiDifficulty.toUpperCase() 
-                    : 'MEDIUM'  // ← Matches: data.get('difficulty', 'MEDIUM')
+                    ? (difficultyMap[ConfigState.aiDifficulty] || 'EASY')
+                    : 'MEDIUM'
             })
         });
         
         if (!response.ok) {
-            throw new Error(`HTTP error! status: ${response.status}`);
+            const errorData = await response.json();
+            throw new Error(errorData.message || `HTTP error! status: ${response.status}`);
         }
         
-        const data = await response.json();
+        const result = await response.json();
         
-        if (data.status === 'created') {
-            Terminal.log(`Game created: ${data.game_id}`, 'success');
+        console.log('API Response:', result);
+        
+        if (result.success) {
+            Terminal.log('Game session created successfully', 'success');
+            
+            // Save to localStorage for game.js to read
+            localStorage.setItem('boardSize', ConfigState.boardSize);
+            localStorage.setItem('gameMode', ConfigState.gameMode);
+            localStorage.setItem('aiDifficulty', ConfigState.aiDifficulty);
             
             // Redirect to game page
             setTimeout(() => {
                 window.location.href = '/game';
             }, 800);
         } else {
-            throw new Error('Game creation failed');
+            throw new Error(result.message || 'Game creation failed');
         }
         
     } catch (error) {
         console.error('Error creating game:', error);
-        Terminal.log('Breach initialization failed', 'error');
-        Toast.error('Failed to create game. Please try again.');
+        Terminal.log(`Breach initialization failed: ${error.message}`, 'error');
+        Toast.error(`Failed to create game: ${error.message}`);
         Loading.hide('#configForm');
     }
 }
-
 // ===== KEYBOARD SHORTCUTS =====
 
 function registerShortcuts() {

@@ -5,91 +5,149 @@
 {% block title %}TACTIX // BLACKBOX - BREACH IN PROGRESS{% endblock %}
 
 {% block extra_head %}
-<!-- ============================================ -->
-<!-- STYLES INTÉGRÉS - GRILLE FORCÉE VISIBLE -->
-<!-- ============================================ -->
 <style>
-/* ===== GAME BOARD - FORCÉ VISIBLE ===== */
+
+/* ===== TERMINAL MESSAGES ===== */
+#terminal-messages {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 0.85rem;
+    color: #00ff9f;
+    text-shadow: 0 0 10px rgba(0, 255, 159, 0.5);
+    padding: 1rem 0;
+    min-height: 60px;
+    display: flex;
+    flex-direction: column;
+    gap: 0.3rem;
+    letter-spacing: 1px;
+}
+
+.terminal-line {
+    opacity: 0;
+    animation: terminalFadeIn 0.5s ease forwards;
+}
+
+.terminal-line::before {
+    content: '>> ';
+    color: #00f6ff;
+    margin-right: 0.5rem;
+}
+
+@keyframes terminalFadeIn {
+    from {
+        opacity: 0;
+        transform: translateX(-10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+.terminal-line.old {
+    opacity: 0.4;
+}
+
+.terminal-cursor {
+    display: inline-block;
+    width: 8px;
+    height: 1em;
+    background-color: #00ff9f;
+    margin-left: 2px;
+    animation: blink 1s step-end infinite;
+}
+
+@keyframes blink {
+    0%, 50% { opacity: 1; }
+    51%, 100% { opacity: 0; }
+}
+
+/* ===== GAME BOARD WRAPPER ===== */
+#game-board-container {
+    width: 100%;
+    padding: 1rem 0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+/* ===== GAME BOARD ===== */
 .game-grid {
     display: grid !important;
     grid-template-columns: repeat(3, 1fr) !important;
-    gap: 0 !important;
-    background: #000000;
-    border: 3px solid #00f6ff;
-    border-radius: 8px;
-    max-width: 600px;
-    margin: 2rem auto;
-    padding: 0;
+    gap: 4px !important;
+    background: rgba(0, 246, 255, 0.5) !important;
+    border: 3px solid #00f6ff !important;
+    border-radius: 8px !important;
+    width: min(100%, 480px) !important;
+    height: min(80vw, 480px) !important;
+    max-width: 480px !important;
+    margin: 0 auto !important;
+    padding: 4px !important;
     box-shadow: 0 0 30px rgba(0, 246, 255, 0.3);
+    box-sizing: border-box !important;
 }
 
-/* Adaptation tailles */
 .game-grid.size-3 { grid-template-columns: repeat(3, 1fr) !important; }
 .game-grid.size-4 { grid-template-columns: repeat(4, 1fr) !important; }
 .game-grid.size-5 { grid-template-columns: repeat(5, 1fr) !important; }
 
 /* ===== GRID CELLS ===== */
 .grid-cell {
-    aspect-ratio: 1;
-    background: #0a0a0f;
-    border: 2px solid #1a1a2e;
+    background: #0a0a0f !important;
+    border: none !important;
+    border-radius: 4px !important;
     display: flex !important;
-    align-items: center;
-    justify-content: center;
+    align-items: center !important;
+    justify-content: center !important;
     cursor: pointer;
-    min-height: 100px;
-    font-size: 3rem;
-    font-weight: bold;
-    transition: all 0.3s ease;
+    width: 100% !important;
+    height: 100% !important;
+    transition: background 0.2s ease, box-shadow 0.2s ease;
     position: relative;
+    overflow: hidden;
 }
 
 .grid-cell:hover:not(.occupied) {
-    background: rgba(0, 246, 255, 0.15);
-    border-color: #00f6ff;
+    background: rgba(0, 246, 255, 0.12) !important;
     box-shadow: inset 0 0 20px rgba(0, 246, 255, 0.2);
 }
 
-.grid-cell.occupied {
-    cursor: not-allowed;
-}
+.grid-cell.occupied { cursor: not-allowed; }
 
-/* Symboles X et O */
 .cell-symbol {
-    font-family: 'Orbitron', sans-serif;
-    font-size: 4rem;
-    animation: symbolAppear 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+    font-family: 'Orbitron', monospace;
+    font-size: clamp(2rem, 5vw, 4rem);
+    font-weight: 900;
+    line-height: 1;
+    animation: symbolAppear 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55) forwards;
 }
 
 .cell-symbol.player-x {
     color: #00f6ff;
-    text-shadow: 0 0 20px #00f6ff, 0 0 40px #00f6ff;
+    text-shadow: 0 0 20px #00f6ff, 0 0 40px rgba(0, 246, 255, 0.5);
 }
 
 .cell-symbol.player-o {
     color: #ff3366;
-    text-shadow: 0 0 20px #ff3366, 0 0 40px #ff3366;
+    text-shadow: 0 0 20px #ff3366, 0 0 40px rgba(255, 51, 102, 0.5);
 }
 
 @keyframes symbolAppear {
-    0% { transform: scale(0) rotate(-180deg); opacity: 0; }
-    50% { transform: scale(1.2) rotate(10deg); }
+    0%   { transform: scale(0) rotate(-180deg); opacity: 0; }
+    60%  { transform: scale(1.2) rotate(10deg); opacity: 1; }
     100% { transform: scale(1) rotate(0deg); opacity: 1; }
 }
 
-/* Win line highlight */
 .grid-cell.win-cell {
-    background: rgba(0, 255, 159, 0.2);
-    border-color: #00ff9f;
+    background: rgba(0, 255, 159, 0.15) !important;
     animation: winPulse 1s ease-in-out infinite;
 }
 
 @keyframes winPulse {
     0%, 100% { box-shadow: inset 0 0 30px rgba(0, 255, 159, 0.3); }
-    50% { box-shadow: inset 0 0 50px rgba(0, 255, 159, 0.6); }
+    50%       { box-shadow: inset 0 0 50px rgba(0, 255, 159, 0.6); }
 }
 
-/* ===== STATUS PANEL ===== */
 .status-indicator {
     padding: 1rem;
     border-radius: 8px;
@@ -125,7 +183,6 @@
 .player-x { color: #00f6ff; }
 .player-o { color: #ff3366; }
 
-/* ===== MOVE HISTORY ===== */
 .move-item {
     padding: 0.5rem 1rem;
     margin-bottom: 0.5rem;
@@ -139,28 +196,23 @@
 
 @keyframes slideInRight {
     from { transform: translateX(-20px); opacity: 0; }
-    to { transform: translateX(0); opacity: 1; }
+    to   { transform: translateX(0); opacity: 1; }
 }
 
-/* ===== GAME OVER MODAL ===== */
 .game-over-overlay {
     position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
     background: rgba(0, 0, 0, 0.9);
     display: none;
     align-items: center;
     justify-content: center;
     z-index: 9999;
-    -webkit-backdrop-filter: blur(10px); /* Safari 9+ */
+    -webkit-backdrop-filter: blur(10px);
     backdrop-filter: blur(10px);
 }
 
-.game-over-overlay.active {
-    display: flex !important;
-}
+.game-over-overlay.active { display: flex !important; }
 
 .game-over-content {
     background: linear-gradient(135deg, #0a0a0f 0%, #1a1a2e 100%);
@@ -174,7 +226,7 @@
 }
 
 @keyframes modalAppear {
-    0% { transform: scale(0.5) rotate(-10deg); opacity: 0; }
+    0%   { transform: scale(0.5) rotate(-10deg); opacity: 0; }
     100% { transform: scale(1) rotate(0); opacity: 1; }
 }
 
@@ -186,18 +238,228 @@
 }
 
 .game-over-title.victory { color: #00ff9f; }
-.game-over-title.defeat { color: #ff3366; }
-.game-over-title.draw { color: #b833ff; }
+.game-over-title.defeat  { color: #ff3366; }
+.game-over-title.draw    { color: #b833ff; }
 
-/* ===== RESPONSIVE ===== */
+/* ===== HACKING-THEMED ACTION BUTTONS ===== */
+.action-buttons-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+    gap: 1rem;
+    margin-top: 1.5rem;
+    padding: 0;
+}
+
+.hack-button {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 1.5rem 1rem;
+    background: linear-gradient(135deg, rgba(10, 10, 15, 0.9) 0%, rgba(20, 20, 30, 0.9) 100%);
+    border: 2px solid;
+    border-radius: 12px;
+    font-family: 'Orbitron', monospace;
+    font-weight: 700;
+    font-size: 0.75rem;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    overflow: hidden;
+    min-height: 120px;
+}
+
+.hack-button::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(135deg, transparent 0%, currentColor 100%);
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+
+.hack-button:hover::before {
+    opacity: 0.1;
+}
+
+.hack-button:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.4);
+}
+
+.hack-button:active {
+    transform: translateY(-1px);
+}
+
+.hack-button:disabled {
+    opacity: 0.3;
+    cursor: not-allowed;
+    transform: none !important;
+}
+
+.hack-button:disabled:hover::before {
+    opacity: 0;
+}
+
+/* Button Icon */
+.hack-icon {
+    width: 50px;
+    height: 50px;
+    margin-bottom: 0.75rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 2rem;
+    position: relative;
+    z-index: 1;
+    filter: drop-shadow(0 0 10px currentColor);
+}
+
+/* Button Label */
+.hack-label {
+    position: relative;
+    z-index: 1;
+    line-height: 1.4;
+}
+
+/* Scan Button - Cyan/Blue theme */
+.hack-button.scan {
+    border-color: #00f6ff;
+    color: #00f6ff;
+}
+
+.hack-button.scan:hover {
+    border-color: #33f8ff;
+    box-shadow: 0 8px 25px rgba(0, 246, 255, 0.3), 0 0 40px rgba(0, 246, 255, 0.2);
+}
+
+/* Undo Button - Orange theme */
+.hack-button.undo {
+    border-color: #ffa500;
+    color: #ffa500;
+}
+
+.hack-button.undo:hover {
+    border-color: #ffb733;
+    box-shadow: 0 8px 25px rgba(255, 165, 0, 0.3), 0 0 40px rgba(255, 165, 0, 0.2);
+}
+
+/* Reset Button - Red theme */
+.hack-button.reset {
+    border-color: #ff3366;
+    color: #ff3366;
+}
+
+.hack-button.reset:hover {
+    border-color: #ff5580;
+    box-shadow: 0 8px 25px rgba(255, 51, 102, 0.3), 0 0 40px rgba(255, 51, 102, 0.2);
+}
+
+/* Config Button - Purple theme */
+.hack-button.config {
+    border-color: #b833ff;
+    color: #b833ff;
+}
+
+.hack-button.config:hover {
+    border-color: #c653ff;
+    box-shadow: 0 8px 25px rgba(184, 51, 255, 0.3), 0 0 40px rgba(184, 51, 255, 0.2);
+}
+
+/* Scan hint styles */
+.scan-hint {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 80%;
+    height: 80%;
+    border-radius: 4px;
+    pointer-events: none;
+    z-index: 5;
+    animation: scanPulse 1.5s ease-in-out infinite;
+}
+
+.scan-hint.best {
+    background: rgba(0, 255, 159, 0.15);
+    border: 2px solid #00ff9f;
+    box-shadow: 0 0 20px rgba(0, 255, 159, 0.4), inset 0 0 20px rgba(0, 255, 159, 0.2);
+}
+
+.scan-hint.danger {
+    background: rgba(255, 51, 102, 0.15);
+    border: 2px solid #ff3366;
+    box-shadow: 0 0 20px rgba(255, 51, 102, 0.4), inset 0 0 20px rgba(255, 51, 102, 0.2);
+}
+
+.scan-hint.fork {
+    background: rgba(255, 165, 0, 0.15);
+    border: 2px solid #ffa500;
+    box-shadow: 0 0 20px rgba(255, 165, 0, 0.4), inset 0 0 20px rgba(255, 165, 0, 0.2);
+}
+
+.scan-hint.center {
+    background: rgba(179, 51, 255, 0.1);
+    border: 2px solid #b833ff;
+    box-shadow: 0 0 15px rgba(179, 51, 255, 0.3), inset 0 0 15px rgba(179, 51, 255, 0.1);
+}
+
+@keyframes scanPulse {
+    0%, 100% { opacity: 0.6; transform: translate(-50%, -50%) scale(0.95); }
+    50% { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+}
+
+.scan-label {
+    position: absolute;
+    top: -25px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: rgba(0, 0, 0, 0.9);
+    padding: 2px 8px;
+    border-radius: 4px;
+    font-size: 0.7rem;
+    font-family: 'Orbitron', monospace;
+    white-space: nowrap;
+    font-weight: bold;
+    letter-spacing: 1px;
+}
+
+.scan-label.best { color: #00ff9f; border: 1px solid #00ff9f; }
+.scan-label.danger { color: #ff3366; border: 1px solid #ff3366; }
+.scan-label.fork { color: #ffa500; border: 1px solid #ffa500; }
+.scan-label.center { color: #b833ff; border: 1px solid #b833ff; }
+
 @media (max-width: 768px) {
-    .grid-cell {
-        min-height: 80px;
-        font-size: 2.5rem;
+    .grid-cell { min-height: 70px !important; }
+    .cell-symbol { font-size: 2.5rem; }
+    .scan-label { font-size: 0.6rem; top: -20px; }
+    .hack-button {
+        min-height: 100px;
+        padding: 1rem 0.75rem;
     }
-    
-    .cell-symbol {
-        font-size: 3rem;
+    .hack-icon {
+        width: 40px;
+        height: 40px;
+        font-size: 1.5rem;
+        margin-bottom: 0.5rem;
+    }
+    .hack-label {
+        font-size: 0.7rem;
+    }
+    #terminal-messages {
+        font-size: 0.75rem;
+        min-height: 50px;
+    }
+}
+
+@media (max-width: 640px) {
+    .action-buttons-grid {
+        grid-template-columns: repeat(2, 1fr);
     }
 }
 </style>
@@ -207,58 +469,76 @@
 <div class="container mx-auto px-4 py-8">
     <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
         
-        <!-- ===== GRILLE DE JEU ===== -->
         <div class="lg:col-span-2">
-            {% call neon_card(
-                title='BREACH GRID',
-                color='cyan',
-                glow=true,
-                scanline=true
-            ) %}
-                <!-- Game Board Container -->
+            {% call neon_card(title='BREACH GRID', color='cyan', glow=true, scanline=true) %}
+                <!-- Terminal Messages -->
+                <div id="terminal-messages">
+                    <div class="terminal-line">OPERATOR ACCESS GRANTED</div>
+                    <div class="terminal-line">SYSTEM RESPONDING<span class="terminal-cursor"></span></div>
+                </div>
+                
                 <div id="game-board-container">
                     <div id="game-board" class="game-grid size-3">
-                        <!-- Grille créée par JavaScript -->
+                        <!-- Board built by game.js -->
                     </div>
                 </div>
-
-                <!-- Game Status -->
                 <div id="game-status" class="mt-4 text-center text-lg font-mono">
                     <span class="text-cyan-400">●</span> READY TO BREACH
                 </div>
             {% endcall %}
 
-            <!-- Action Buttons -->
-            <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mt-6">
-                <button id="btn-scan" class="neon-button" disabled>
-                    <span class="text-purple-400">🔍</span> EXPLOIT SCAN
+            <!-- HACKING-THEMED ACTION BUTTONS -->
+            <div class="action-buttons-grid">
+                <button id="btn-scan" class="hack-button scan">
+                    <div class="hack-icon">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <circle cx="12" cy="12" r="10"/>
+                            <path d="M12 6v6l4 2"/>
+                            <circle cx="12" cy="12" r="3"/>
+                        </svg>
+                    </div>
+                    <div class="hack-label">Exploit<br>Scan</div>
                 </button>
-                
-                <button id="btn-undo" class="neon-button" disabled>
-                    <span class="text-cyan-400">↶</span> UNDO MOVE
+
+                <button id="btn-undo" class="hack-button undo">
+                    <div class="hack-icon">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M3 7v6h6"/>
+                            <path d="M21 17a9 9 0 00-9-9 9 9 0 00-9 9"/>
+                        </svg>
+                    </div>
+                    <div class="hack-label">Firewall<br>Rollback</div>
                 </button>
-                
-                <button id="btn-reset" class="neon-button">
-                    <span class="text-red-400">⟳</span> RESET GRID
+
+                <button id="btn-reset" class="hack-button reset">
+                    <div class="hack-icon">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <circle cx="12" cy="12" r="10"/>
+                            <path d="M12 8v8M8 12h8"/>
+                        </svg>
+                    </div>
+                    <div class="hack-label">Reset<br>System</div>
                 </button>
-                
-                <a href="/configure" class="neon-button text-center">
-                    <span class="text-gray-400">←</span> CONFIGURE
+
+                <a href="/configure" class="hack-button config">
+                    <div class="hack-icon">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <circle cx="12" cy="12" r="3"/>
+                            <path d="M12 1v6m0 6v6M4.22 4.22l4.24 4.24m5.08 5.08l4.24 4.24M1 12h6m6 0h6M4.22 19.78l4.24-4.24m5.08-5.08l4.24-4.24"/>
+                        </svg>
+                    </div>
+                    <div class="hack-label">Configure<br>Game</div>
                 </a>
             </div>
         </div>
 
-        <!-- ===== PANEL LATERAL ===== -->
         <div class="space-y-6">
-            
-            <!-- Status Indicators -->
             {% call neon_card(title='SYSTEM STATUS', color='cyan') %}
                 <div id="status-operator" class="status-indicator active">
                     <div class="status-label">Operator</div>
                     <div class="status-player player-x">X</div>
                     <div class="text-sm text-cyan-400 mt-2">● ACTIVE</div>
                 </div>
-                
                 <div id="status-system" class="status-indicator waiting">
                     <div class="status-label">System</div>
                     <div class="status-player player-o">O</div>
@@ -266,12 +546,11 @@
                 </div>
             {% endcall %}
 
-            <!-- Game Info -->
             {% call neon_card(title='BREACH INFO', color='purple') %}
                 <div class="space-y-2 text-sm font-mono">
                     <div class="flex justify-between">
                         <span class="text-gray-400">Grid Size:</span>
-                        <span id="info-grid-size" class="text-purple-400">3×3</span>
+                        <span id="info-grid-size" class="text-purple-400">3x3</span>
                     </div>
                     <div class="flex justify-between">
                         <span class="text-gray-400">Mode:</span>
@@ -288,396 +567,29 @@
                 </div>
             {% endcall %}
 
-            <!-- Move History -->
             {% call neon_card(title='MOVE LOG', color='green') %}
                 <div id="move-history" class="max-h-64 overflow-y-auto space-y-2">
-                    <div class="text-center text-gray-500 text-sm">
-                        No moves yet
-                    </div>
+                    <div class="text-center text-gray-500 text-sm">No moves yet</div>
                 </div>
             {% endcall %}
-
         </div>
     </div>
 </div>
 
-<!-- ===== GAME OVER MODAL ===== -->
 <div id="game-over-overlay" class="game-over-overlay">
     <div class="game-over-content">
         <h2 id="game-over-title" class="game-over-title"></h2>
         <p id="game-over-message" class="text-xl mb-6"></p>
         <div class="space-y-4">
-            <button id="btn-play-again" class="neon-button w-full">
-                PLAY AGAIN
-            </button>
-            <a href="/configure" class="neon-button w-full block">
-                NEW CONFIGURATION
-            </a>
+            <button id="btn-play-again" class="neon-button w-full">PLAY AGAIN</button>
+            <a href="/configure" class="neon-button w-full block">NEW CONFIGURATION</a>
         </div>
     </div>
 </div>
 {% endblock %}
 
 {% block extra_scripts %}
-<!-- ============================================ -->
-<!-- JAVASCRIPT INTÉGRÉ - MOTEUR DE JEU -->
-<!-- ============================================ -->
-<script>
-console.log('🎮 GAME ENGINE LOADING...');
-
-// ===== CONFIGURATION =====
-const GameConfig = {
-    boardSize: parseInt(localStorage.getItem('boardSize') || '3'),
-    gameMode: localStorage.getItem('gameMode') || 'operator_vs_ai',
-    aiDifficulty: localStorage.getItem('aiDifficulty') || 'easy',
-    
-    getWinLength() {
-        return this.boardSize === 3 ? 3 : 4;
-    }
-};
-
-console.log('📋 Config:', GameConfig);
-
-// ===== STATE MANAGEMENT =====
-const GameState = {
-    board: [],
-    currentPlayer: 'X',
-    moveCount: 0,
-    gameOver: false,
-    winner: null,
-    winLine: null,
-    
-    init() {
-        const size = GameConfig.boardSize;
-        this.board = Array(size).fill(null).map(() => Array(size).fill(null));
-        this.currentPlayer = 'X';
-        this.moveCount = 0;
-        this.gameOver = false;
-        this.winner = null;
-        this.winLine = null;
-    },
-    
-    makeMove(row, col) {
-        if (this.gameOver || this.board[row][col] !== null) {
-            return false;
-        }
-        
-        this.board[row][col] = this.currentPlayer;
-        this.moveCount++;
-        
-        // Check win
-        const winResult = this.checkWin();
-        if (winResult) {
-            this.gameOver = true;
-            this.winner = this.currentPlayer;
-            this.winLine = winResult;
-            return true;
-        }
-        
-        // Check draw
-        if (this.isBoardFull()) {
-            this.gameOver = true;
-            return true;
-        }
-        
-        // Switch player
-        this.currentPlayer = this.currentPlayer === 'X' ? 'O' : 'X';
-        return true;
-    },
-    
-    checkWin() {
-        const size = GameConfig.boardSize;
-        const winLen = GameConfig.getWinLength();
-        const player = this.currentPlayer;
-        
-        // Check rows
-        for (let r = 0; r < size; r++) {
-            for (let c = 0; c <= size - winLen; c++) {
-                let win = true;
-                for (let i = 0; i < winLen; i++) {
-                    if (this.board[r][c + i] !== player) {
-                        win = false;
-                        break;
-                    }
-                }
-                if (win) {
-                    return Array(winLen).fill(0).map((_, i) => ({ row: r, col: c + i }));
-                }
-            }
-        }
-        
-        // Check columns
-        for (let c = 0; c < size; c++) {
-            for (let r = 0; r <= size - winLen; r++) {
-                let win = true;
-                for (let i = 0; i < winLen; i++) {
-                    if (this.board[r + i][c] !== player) {
-                        win = false;
-                        break;
-                    }
-                }
-                if (win) {
-                    return Array(winLen).fill(0).map((_, i) => ({ row: r + i, col: c }));
-                }
-            }
-        }
-        
-        // Check diagonals ↘
-        for (let r = 0; r <= size - winLen; r++) {
-            for (let c = 0; c <= size - winLen; c++) {
-                let win = true;
-                for (let i = 0; i < winLen; i++) {
-                    if (this.board[r + i][c + i] !== player) {
-                        win = false;
-                        break;
-                    }
-                }
-                if (win) {
-                    return Array(winLen).fill(0).map((_, i) => ({ row: r + i, col: c + i }));
-                }
-            }
-        }
-        
-        // Check diagonals ↙
-        for (let r = winLen - 1; r < size; r++) {
-            for (let c = 0; c <= size - winLen; c++) {
-                let win = true;
-                for (let i = 0; i < winLen; i++) {
-                    if (this.board[r - i][c + i] !== player) {
-                        win = false;
-                        break;
-                    }
-                }
-                if (win) {
-                    return Array(winLen).fill(0).map((_, i) => ({ row: r - i, col: c + i }));
-                }
-            }
-        }
-        
-        return null;
-    },
-    
-    isBoardFull() {
-        return this.board.every(row => row.every(cell => cell !== null));
-    }
-};
-
-// ===== UI MANAGEMENT =====
-const UI = {
-    createBoard() {
-        const board = document.getElementById('game-board');
-        if (!board) {
-            console.error('❌ Board container not found!');
-            return;
-        }
-        
-        const size = GameConfig.boardSize;
-        board.className = `game-grid size-${size}`;
-        board.innerHTML = '';
-        
-        for (let row = 0; row < size; row++) {
-            for (let col = 0; col < size; col++) {
-                const cell = document.createElement('div');
-                cell.className = 'grid-cell';
-                cell.dataset.row = row;
-                cell.dataset.col = col;
-                
-                cell.addEventListener('click', () => this.handleCellClick(row, col));
-                
-                board.appendChild(cell);
-            }
-        }
-        
-        console.log(`✅ Game board created: ${size}×${size}`);
-    },
-    
-    handleCellClick(row, col) {
-        if (GameState.gameOver || GameState.board[row][col] !== null) {
-            return;
-        }
-        
-        const success = GameState.makeMove(row, col);
-        if (success) {
-            this.updateCell(row, col, GameState.board[row][col]);
-            this.updateStatus();
-            this.addToMoveHistory(row, col, GameState.board[row][col]);
-            
-            if (GameState.gameOver) {
-                setTimeout(() => this.showGameOver(), 500);
-            } else if (GameConfig.gameMode === 'operator_vs_ai' && GameState.currentPlayer === 'O') {
-                setTimeout(() => this.makeAIMove(), 500);
-            }
-        }
-    },
-    
-    updateCell(row, col, player) {
-        const cell = document.querySelector(`.grid-cell[data-row="${row}"][data-col="${col}"]`);
-        if (cell) {
-            cell.innerHTML = `<span class="cell-symbol player-${player.toLowerCase()}">${player}</span>`;
-            cell.classList.add('occupied');
-        }
-    },
-    
-    updateStatus() {
-        const statusEl = document.getElementById('game-status');
-        const movesEl = document.getElementById('info-moves');
-        
-        if (movesEl) movesEl.textContent = GameState.moveCount;
-        
-        if (GameState.gameOver) {
-            if (GameState.winner) {
-                statusEl.innerHTML = `<span class="text-green-400">●</span> ${GameState.winner} WINS!`;
-                
-                // Highlight win cells
-                if (GameState.winLine) {
-                    GameState.winLine.forEach(pos => {
-                        const cell = document.querySelector(`.grid-cell[data-row="${pos.row}"][data-col="${pos.col}"]`);
-                        if (cell) cell.classList.add('win-cell');
-                    });
-                }
-            } else {
-                statusEl.innerHTML = `<span class="text-purple-400">●</span> DRAW - STALEMATE`;
-            }
-        } else {
-            const playerColor = GameState.currentPlayer === 'X' ? 'cyan' : 'red';
-            statusEl.innerHTML = `<span class="text-${playerColor}-400">●</span> ${GameState.currentPlayer} TO MOVE`;
-        }
-        
-        // Update status panels
-        this.updateStatusPanels();
-    },
-    
-    updateStatusPanels() {
-        const opPanel = document.getElementById('status-operator');
-        const sysPanel = document.getElementById('status-system');
-        
-        if (GameState.currentPlayer === 'X') {
-            opPanel.className = 'status-indicator active';
-            opPanel.querySelector('.text-sm').innerHTML = '● ACTIVE';
-            sysPanel.className = 'status-indicator waiting';
-            sysPanel.querySelector('.text-sm').innerHTML = '○ WAITING';
-        } else {
-            opPanel.className = 'status-indicator waiting';
-            opPanel.querySelector('.text-sm').innerHTML = '○ WAITING';
-            sysPanel.className = 'status-indicator active';
-            sysPanel.querySelector('.text-sm').innerHTML = '● ACTIVE';
-        }
-    },
-    
-    addToMoveHistory(row, col, player) {
-        const historyEl = document.getElementById('move-history');
-        if (!historyEl) return;
-        
-        if (GameState.moveCount === 1) {
-            historyEl.innerHTML = '';
-        }
-        
-        const moveItem = document.createElement('div');
-        moveItem.className = 'move-item';
-        moveItem.innerHTML = `
-            <span class="text-gray-400">Move ${GameState.moveCount}:</span>
-            <span class="text-${player === 'X' ? 'cyan' : 'red'}-400">${player}</span>
-            → (${row}, ${col})
-        `;
-        
-        historyEl.insertBefore(moveItem, historyEl.firstChild);
-    },
-    
-    makeAIMove() {
-        const emptyCells = [];
-        const size = GameConfig.boardSize;
-        
-        for (let r = 0; r < size; r++) {
-            for (let c = 0; c < size; c++) {
-                if (GameState.board[r][c] === null) {
-                    emptyCells.push({ row: r, col: c });
-                }
-            }
-        }
-        
-        if (emptyCells.length > 0) {
-            const move = emptyCells[Math.floor(Math.random() * emptyCells.length)];
-            this.handleCellClick(move.row, move.col);
-        }
-    },
-    
-    showGameOver() {
-        const overlay = document.getElementById('game-over-overlay');
-        const title = document.getElementById('game-over-title');
-        const message = document.getElementById('game-over-message');
-        
-        if (GameState.winner) {
-            if (GameState.winner === 'X') {
-                title.textContent = 'BREACH SUCCESSFUL';
-                title.className = 'game-over-title victory';
-                message.textContent = 'Operator dominates the system';
-            } else {
-                title.textContent = 'SYSTEM DEFENSE';
-                title.className = 'game-over-title defeat';
-                message.textContent = 'AI maintains control';
-            }
-        } else {
-            title.textContent = 'STALEMATE';
-            title.className = 'game-over-title draw';
-            message.textContent = 'Gridlock - No clear victor';
-        }
-        
-        overlay.classList.add('active');
-    },
-    
-    reset() {
-        GameState.init();
-        this.createBoard();
-        this.updateStatus();
-        
-        const historyEl = document.getElementById('move-history');
-        if (historyEl) {
-            historyEl.innerHTML = '<div class="text-center text-gray-500 text-sm">No moves yet</div>';
-        }
-        
-        const overlay = document.getElementById('game-over-overlay');
-        overlay.classList.remove('active');
-    }
-};
-
-// ===== INITIALIZATION =====
-document.addEventListener('DOMContentLoaded', () => {
-    console.log('🚀 DOM LOADED - Initializing game...');
-    
-    // Update info panel
-    document.getElementById('info-grid-size').textContent = `${GameConfig.boardSize}×${GameConfig.boardSize}`;
-    document.getElementById('info-mode').textContent = GameConfig.gameMode === 'operator_vs_ai' ? 'vs AI' : 'vs OPERATOR';
-    document.getElementById('info-difficulty').textContent = GameConfig.aiDifficulty.toUpperCase();
-    
-    // Initialize game
-    GameState.init();
-    UI.createBoard();
-    UI.updateStatus();
-    
-    // Button handlers
-    document.getElementById('btn-reset').addEventListener('click', () => {
-        if (confirm('Reset the grid? All progress will be lost.')) {
-            UI.reset();
-        }
-    });
-    
-    document.getElementById('btn-play-again').addEventListener('click', () => {
-        UI.reset();
-    });
-    
-    console.log('✅ GAME ENGINE READY');
-});
-
-// ===== FALLBACK: Si la grille n'est pas créée après 2 secondes =====
-setTimeout(() => {
-    const board = document.getElementById('game-board');
-    if (board && board.children.length === 0) {
-        console.warn('⚠️ Creating fallback grid...');
-        UI.createBoard();
-    }
-}, 2000);
-</script>
-
-<!-- Charge ui.js si disponible (optionnel) -->
-<script src="{{ url_for('static', filename='js/ui.js') }}" onerror="console.log('ui.js not found - using fallback')"></script>
+<script src="{{ url_for('static', filename='js/ui.js') }}"></script>
+<script src="{{ url_for('static', filename='js/game.js') }}"></script>
+<script src="{{ url_for('static', filename='js/terminal.js') }}"></script>
 {% endblock %}

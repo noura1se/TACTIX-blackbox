@@ -15,6 +15,7 @@ class ScanResult:
     bestMoves: List[MoveRC]      # immediate wins for current player
     dangerMoves: List[MoveRC]    # blocks opponent's immediate win
     forks: List[MoveRC]
+    dangerForks: List[MoveRC]   # Added for 5x5 fork blocks
     centerMoves: List[MoveRC]
 
 
@@ -75,10 +76,36 @@ def scan(state: GameState, config: GameConfig) -> ScanResult:
                         forks.append((r, c))
                         break
 
+    dangerForks: List[MoveRC] = []
+
+    # 4) opponent forks (block moves that allow opponent to create 2+ winning moves)
+    if not best and not danger:
+        for (r, c) in moves:
+            # simulate opponent playing here
+            snap1 = _copy_state(state)
+            snap1.current_player = opp
+            h1 = HistoryStack()
+            apply_move_rc(snap1, config, h1, r, c)
+
+            win_count = 0
+            for (rr, cc) in available_moves(snap1):
+                snap2 = _copy_state(snap1)
+                snap2.current_player = opp
+                h2 = HistoryStack()
+                apply_move_rc(snap2, config, h2, rr, cc)
+                w, _ = check_winner(snap2.board, config.win_len)
+                if w == opp:
+                    win_count += 1
+                    if win_count >= 2:
+                        dangerForks.append((r, c))
+                        break
+
+
     return ScanResult(
         bestMoves=_uniq(best),
         dangerMoves=_uniq(danger),
         forks=_uniq(forks),
+        dangerForks=_uniq(dangerForks),  # Added for 5x5 fork blocks
         centerMoves=_uniq(centers),
     )
 
