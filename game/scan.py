@@ -105,7 +105,7 @@ def scan(state: GameState, config: GameConfig) -> ScanResult:
         bestMoves=_uniq(best),
         dangerMoves=_uniq(danger),
         forks=_uniq(forks),
-        dangerForks=_uniq(dangerForks),  # Added for 5x5 fork blocks
+        dangerForks=_uniq(dangerForks),
         centerMoves=_uniq(centers),
     )
 

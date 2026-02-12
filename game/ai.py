@@ -17,6 +17,9 @@ class AIMove:
     difficulty: str
     scan_bestMoves: list[MoveRC]
     scan_dangerMoves: list[MoveRC]
+    # ajout pour les forks:
+    scan_dangerForks: list[MoveRC]
+    scan_forks: list[MoveRC]
     score: int
     depth: int
 
@@ -55,7 +58,7 @@ def choose_move(state: GameState, config: GameConfig, difficulty: str = "MEDIUM"
     
     if not all_moves:
         return AIMove(move=None, difficulty=diff, scan_bestMoves=[], 
-                     scan_dangerMoves=[], score=0, depth=0)
+                     scan_dangerMoves=[], scan_dangerForks=[], scan_forks=[], score=0, depth=0)
 
     # ═══════════════════════════════════════════════════════════
     # EASY MODE: 75% Random, 25% Shallow Minimax (NO SCAN!)
@@ -69,6 +72,8 @@ def choose_move(state: GameState, config: GameConfig, difficulty: str = "MEDIUM"
                 difficulty=diff,
                 scan_bestMoves=[],
                 scan_dangerMoves=[],
+                scan_dangerForks=[],
+                scan_forks=[],
                 score=0,
                 depth=0
             )
@@ -90,11 +95,14 @@ def choose_move(state: GameState, config: GameConfig, difficulty: str = "MEDIUM"
             use_scan_ordering=False  # No scan ordering for EASY
         )
         
+        
         return AIMove(
             move=res.move,
             difficulty=diff,
             scan_bestMoves=[],
             scan_dangerMoves=[],
+            scan_dangerForks=[],
+            scan_forks=[],
             score=res.score,
             depth=res.depth
         )
@@ -133,6 +141,8 @@ def choose_move(state: GameState, config: GameConfig, difficulty: str = "MEDIUM"
             difficulty=diff,
             scan_bestMoves=[],
             scan_dangerMoves=[],
+            scan_dangerForks=[],
+            scan_forks=[],
             score=res.score,
             depth=res.depth
         )
@@ -151,6 +161,8 @@ def choose_move(state: GameState, config: GameConfig, difficulty: str = "MEDIUM"
             difficulty=diff,
             scan_bestMoves=s.bestMoves,
             scan_dangerMoves=s.dangerMoves,
+            scan_dangerForks=getattr(s, "dangerForks", []),
+            scan_forks=getattr(s, "forks", []),
             score=999999,
             depth=0
         )
@@ -162,11 +174,40 @@ def choose_move(state: GameState, config: GameConfig, difficulty: str = "MEDIUM"
             difficulty=diff,
             scan_bestMoves=s.bestMoves,
             scan_dangerMoves=s.dangerMoves,
+            scan_dangerForks=getattr(s, "dangerForks", []),
+            scan_forks=getattr(s, "forks", []),
             score=500000,
             depth=0
         )
 
     
+    # RELENTLESS blocks opponent forks (2-move threats)
+    if getattr(s, "dangerForks", []):
+        return AIMove(
+            move=s.dangerForks[0],
+            difficulty=diff,
+            scan_bestMoves=s.bestMoves,
+            scan_dangerMoves=s.dangerMoves,
+            scan_dangerForks=getattr(s, "dangerForks", []),
+            scan_forks=getattr(s, "forks", []),
+            score=400000,
+            depth=0
+        )
+
+    # RELENTLESS plays its own forks (create 2-move trap)
+    if getattr(s, "forks", []):
+        return AIMove(
+            move=s.forks[0],
+            difficulty=diff,
+            scan_bestMoves=s.bestMoves,
+            scan_dangerMoves=s.dangerMoves,
+            scan_dangerForks=getattr(s, "dangerForks", []),
+            scan_forks=getattr(s, "forks", []),
+            score=300000,
+            depth=0
+        )
+
+
     # For non-critical positions: use deep minimax with scan ordering
     depth_map = {
         3: 9,   # 3×3: depth 9 - PERFECT (full game tree)
@@ -195,6 +236,8 @@ def choose_move(state: GameState, config: GameConfig, difficulty: str = "MEDIUM"
         difficulty=diff,
         scan_bestMoves=s.bestMoves,
         scan_dangerMoves=s.dangerMoves,
+        scan_dangerForks=getattr(s, "dangerForks", []),
+        scan_forks=getattr(s, "forks", []),
         score=res.score,
         depth=res.depth
     )
@@ -208,14 +251,34 @@ def choose_ai_move(state: GameState, config: GameConfig, difficulty: str = "MEDI
     ai = choose_move(state, config, difficulty=difficulty)
     if ai.move is None:
         return None, {"reason": "no_moves"}
-
+        
     n = len(state.board) 
     pos = ai.move[0] * n + ai.move[1]
-    meta: Dict[str, Any] = {
-        "difficulty": ai.difficulty,
-        "score": ai.score,
-        "depth": ai.depth,
-        "scan_bestMovesRC": ai.scan_bestMoves,
-        "scan_dangerMovesRC": ai.scan_dangerMoves,
-    }
-    return pos, meta 
+    
+    # Check difficulty to determine what scan data to include
+    diff = (difficulty or "MEDIUM").upper().strip()
+    
+    if diff in ["EASY", "MEDIUM"]:
+        # EASY and MEDIUM don't use scan, return empty scan/fork data
+        meta: Dict[str, Any] = {
+            "difficulty": ai.difficulty,
+            "score": ai.score,
+            "depth": ai.depth,
+            "scan_bestMovesRC": [],
+            "scan_dangerMovesRC": [],
+            "scan_dangerForksRC": [],
+            "scan_forksRC": [],
+        }
+    else:  # RELENTLESS
+        # RELENTLESS uses scan, return full scan data
+        meta: Dict[str, Any] = {
+            "difficulty": ai.difficulty,
+            "score": ai.score,
+            "depth": ai.depth,
+            "scan_bestMovesRC": ai.scan_bestMoves,
+            "scan_dangerMovesRC": ai.scan_dangerMoves,
+            "scan_dangerForksRC": getattr(ai, "scan_dangerForks", []),
+            "scan_forksRC": getattr(ai, "scan_forks", []),
+        }
+    
+    return pos, meta

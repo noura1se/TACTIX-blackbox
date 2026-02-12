@@ -296,5 +296,4 @@ def api_stats_reset():
         STORE.reset()
     except Exception as e:
         return _json_err("Failed to reset stats.", 500, {"error": str(e)})
-
     return _json_ok(message="Stats cleared")
