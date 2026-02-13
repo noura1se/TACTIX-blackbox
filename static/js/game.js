@@ -775,8 +775,13 @@ function handleGameOver(result) {
             }
         }
         
-        if (result.winner === 'X') Confetti.create(100);
-        setTimeout(() => showGameOverModal(result.winner, `${result.winner} completed the breach`), 1000);
+        if (result.winner === 'X'){
+            setTimeout(() => showGameOverModal(result.winner, `Firewall cracked -- Control taken by Operator`), 4000); 
+            Confetti.create(200);
+        }
+        else {
+            setTimeout(() => showGameOverModal(result.winner, `Defense protocol executed -- Operator removed from network`), 1000);
+        }    
     }
 }
 
