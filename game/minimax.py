@@ -28,15 +28,10 @@ MATE = 10_000_000
 
 
 # ========================================
-# ✅ PROPER FIX: Use MATE instead of infinity
+# PROPER FIX: Use MATE instead of infinity
 # ========================================
 def safe_int(value: float) -> int:
-    """
-    Safely convert float to int, handling infinity.
-    
-    This should rarely be needed if alpha/beta are initialized correctly,
-    but it's kept as a safety net.
-    """
+
     if value == math.inf:
         return MATE
     elif value == -math.inf:
@@ -86,21 +81,17 @@ def _apply_move_copy(state: GameState, move: Move, player: Player) -> GameState:
     """
     r, c = move
     if state.board[r][c] is not None:
-        # invalid, return same (minimax won't pick invalid if legal_moves is correct)
         return state
 
     s2 = deepcopy(state)
     s2.board[r][c] = player
     s2.move_count += 1
 
-    winner, line = check_winner(s2.board, config_win_len=s2_config_win_len(state=None, fallback=None))  # placeholder
-    # We'll not rely on this (we use is_win/is_draw which use config)
-    # Keep state flags consistent anyway:
+    winner, line = check_winner(s2.board, config_win_len=s2_config_win_len(state=None, fallback=None))  
     s2.winner = winner
     s2.win_line = line
-    s2.is_draw = False  # recomputed via is_draw(state, config)
+    s2.is_draw = False  
 
-    # switch player if game continues
     if s2.winner is None:
         s2.current_player = opponent(player)
 
@@ -126,14 +117,15 @@ def search_best_move(
     Returns best move for current player ("X" or "O").
     Uses alpha-beta pruning + transposition table + move ordering from scan().
     
-    ✅ KEY FIX: Initialize alpha/beta with MATE, not math.inf
+    On a avait un probleme avec les valuers math.inf qui sont des floats, alors que notre evaluation et nos scores sont des ints
+    KEY FIX: Initialize alpha/beta with MATE, not math.inf 
     """
     start = time.time()
     deadline = (start + (time_limit_ms / 1000.0)) if time_limit_ms else None
 
     p = current_player(state)
 
-    tt: Dict[str, Tuple[int, int]] = {}  # key -> (depth, score)
+    tt: Dict[str, Tuple[int, int]] = {}  
     nodes = 0
     cutoffs = 0
 
@@ -146,10 +138,10 @@ def search_best_move(
         moves = _order_moves(moves, s)
 
     best_move = moves[0]
-    best_score = -MATE  # ✅ FIX: Use MATE instead of -math.inf
+    best_score = -MATE  # FIX: Use MATE instead of -math.inf
 
-    alpha = -MATE  # ✅ FIX: Use MATE instead of -math.inf
-    beta = MATE    # ✅ FIX: Use MATE instead of math.inf
+    alpha = -MATE  # FIX: Use MATE instead of -math.inf
+    beta = MATE    # FIX: Use MATE instead of math.inf
 
     for m in moves:
         if deadline and time.time() > deadline:
@@ -170,7 +162,7 @@ def search_best_move(
 
     return SearchResult(
         move=best_move, 
-        score=best_score,  # ✅ Already an int, no conversion needed
+        score=best_score,  
         depth=depth, 
         nodes=nodes, 
         cutoffs=cutoffs
@@ -198,35 +190,29 @@ def _apply_move_state(state: GameState, config: GameConfig, move: Move, player: 
 
 
 # ========================================
-# ✅ COMPLETE FIX: Terminal detection + MATE initialization
+# Autre FIX: Terminal detection + MATE initialization
 # ========================================
 def _max_value(
     state: GameState,
     config: GameConfig,
     depth: int,
-    alpha: int,  # ✅ Changed type hint: int instead of float
-    beta: int,   # ✅ Changed type hint: int instead of float
+    alpha: int,  # Changed type hint: int instead of float
+    beta: int,   # meme chose ici
     perspective_player: Player,
     tt: Dict[str, Tuple[int, int]],
     deadline: Optional[float],
 ) -> Tuple[int, int, int]:
     """
     Returns (score, nodes, cutoffs)
-    
-    ✅ FIXES:
-    1. Use state.winner directly (no recalculation)
-    2. Initialize v with -MATE (not -math.inf)
-    3. All alpha/beta operations use int (MATE)
     """
     if deadline and time.time() > deadline:
         return evaluate(state, config, perspective_player), 0, 0
 
-    # ✅ FIX 1: Check state.winner directly
     if state.winner is not None:
         if state.winner == perspective_player:
-            return MATE + depth, 0, 0  # Good for us
+            return MATE + depth, 0, 0  
         else:
-            return -MATE - depth, 0, 0  # Bad for us
+            return -MATE - depth, 0, 0  
 
     if state.is_draw or depth == 0:
         return evaluate(state, config, perspective_player), 0, 0
@@ -241,7 +227,6 @@ def _max_value(
 
     moves = legal_moves(state)
     
-    # ✅ Edge case: No legal moves (shouldn't happen if terminal check is correct)
     if not moves:
         return evaluate(state, config, perspective_player), 0, 0
     
@@ -249,7 +234,7 @@ def _max_value(
         s = scan(state, config)
         moves = _order_moves(moves, s)
 
-    v = -MATE  # ✅ FIX 2: Use -MATE instead of -math.inf
+    v = -MATE  
     nodes = 0
     cutoffs = 0
 
@@ -276,29 +261,23 @@ def _min_value(
     state: GameState,
     config: GameConfig,
     depth: int,
-    alpha: int,  # ✅ Changed type hint: int instead of float
-    beta: int,   # ✅ Changed type hint: int instead of float
+    alpha: int,  # Changed type hint: int instead of float
+    beta: int,   # meme chose ici 
     perspective_player: Player,
     tt: Dict[str, Tuple[int, int]],
     deadline: Optional[float],
 ) -> Tuple[int, int, int]:
     """
     Returns (score, nodes, cutoffs)
-    
-    ✅ FIXES:
-    1. Use state.winner directly (no recalculation)
-    2. Initialize v with MATE (not math.inf)
-    3. All alpha/beta operations use int (MATE)
     """
     if deadline and time.time() > deadline:
         return evaluate(state, config, perspective_player), 0, 0
 
-    # ✅ FIX 1: Check state.winner directly
     if state.winner is not None:
         if state.winner == perspective_player:
-            return MATE + depth, 0, 0  # Good for perspective player
+            return MATE + depth, 0, 0  
         else:
-            return -MATE - depth, 0, 0  # Bad for perspective player
+            return -MATE - depth, 0, 0  
 
     if state.is_draw or depth == 0:
         return evaluate(state, config, perspective_player), 0, 0
@@ -313,7 +292,6 @@ def _min_value(
 
     moves = legal_moves(state)
     
-    # ✅ Edge case: No legal moves (shouldn't happen if terminal check is correct)
     if not moves:
         return evaluate(state, config, perspective_player), 0, 0
     
@@ -321,7 +299,7 @@ def _min_value(
         s = scan(state, config)
         moves = _order_moves(moves, s)
 
-    v = MATE  # ✅ FIX 2: Use MATE instead of math.inf
+    v = MATE  
     nodes = 0
     cutoffs = 0
 
@@ -346,12 +324,12 @@ def _min_value(
 
 def _order_moves(moves: List[Move], s) -> List[Move]:
     """
-    Priority using scan():
-      1) immediate wins
+    Liste de priorite de scan():
+      1) immediate wins 
       2) blocks
       3) forks
-      4) center-ish
-      5) rest
+      4) center
+      5) le reste
     """
     best = set(getattr(s, "bestMoves", []))
     danger = set(getattr(s, "dangerMoves", []))

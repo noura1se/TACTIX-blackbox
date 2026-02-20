@@ -54,7 +54,7 @@
             {% if animate %}terminal-animate{% endif %}"
      data-line-type="{{ type }}">
     
-    <!-- Timestamp (optional) -->
+    <!-- Timestamp -->
     {% if timestamp %}
     <span class="text-gray-600 text-xs shrink-0">
         [{{ timestamp }}]
@@ -71,7 +71,7 @@
         {{ text | safe }}
     </span>
     
-    <!-- Cursor (for animated lines) -->
+    <!-- Cursor -->
     {% if animate %}
     <span class="terminal-cursor {{ style.prefix_color }} animate-terminal-blink">█</span>
     {% endif %}

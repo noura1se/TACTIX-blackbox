@@ -17,7 +17,6 @@ class HistoryItem:
 class HistoryStack:
     """
     Simple undo stack using full state snapshots.
-    It's small (max 25 cells), so snapshots are cheap & super reliable.
     """
     def __init__(self) -> None:
         self._stack: List[HistoryItem] = []

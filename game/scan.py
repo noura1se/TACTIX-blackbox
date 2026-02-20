@@ -12,10 +12,10 @@ MoveRC = Tuple[int, int]
 
 @dataclass
 class ScanResult:
-    bestMoves: List[MoveRC]      # immediate wins for current player
-    dangerMoves: List[MoveRC]    # blocks opponent's immediate win
+    bestMoves: List[MoveRC]      
+    dangerMoves: List[MoveRC]    
     forks: List[MoveRC]
-    dangerForks: List[MoveRC]   # Added for 5x5 fork blocks
+    dangerForks: List[MoveRC]  
     centerMoves: List[MoveRC]
 
 
@@ -33,7 +33,6 @@ def scan(state: GameState, config: GameConfig) -> ScanResult:
     forks: List[MoveRC] = []
     centers: List[MoveRC] = _centerish_moves(state, moves)
 
-    # We need a temporary history because apply_move_rc requires it
     temp_history = HistoryStack()
 
     # 1) immediate win for current player
@@ -45,10 +44,9 @@ def scan(state: GameState, config: GameConfig) -> ScanResult:
         if w == p:
             best.append((r, c))
 
-    # 2) opponent immediate win (so block)
+    # 2) opponent immediate win (si oponent peut gagner on le block)
     for (r, c) in moves:
         snapshot = _copy_state(state)
-        # force opponent to play this move (simulate)
         snapshot.current_player = opp
         h = HistoryStack()
         apply_move_rc(snapshot, config, h, r, c)
@@ -56,7 +54,7 @@ def scan(state: GameState, config: GameConfig) -> ScanResult:
         if w == opp:
             danger.append((r, c))
 
-    # 3) forks (create 2+ winning moves next turn)
+    # 3) forks 
     if not best:
         for (r, c) in moves:
             snap1 = _copy_state(state)
@@ -111,10 +109,7 @@ def scan(state: GameState, config: GameConfig) -> ScanResult:
 
 
 def exploit_scan(state: GameState, config: GameConfig) -> Dict[str, Any]:
-    """
-    Flask endpoint expects a dict with bestMoves/dangerMoves in *pos* format too.
-    We'll return both rc and pos so UI can choose.
-    """
+
     s = scan(state, config)
     n = len(state.board)
 
@@ -150,7 +145,6 @@ def _uniq(xs: List[MoveRC]) -> List[MoveRC]:
 
 
 def _copy_state(state: GameState) -> GameState:
-    # lightweight deep copy
     board = [row[:] for row in state.board]
     return GameState(
         board=board,

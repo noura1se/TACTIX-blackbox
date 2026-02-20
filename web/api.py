@@ -26,17 +26,17 @@ try:
     from game.ai import choose_ai_move
     from game.scan import exploit_scan
 except Exception as e:
-    GameConfig = None  # type: ignore
-    GameState = None  # type: ignore
-    new_state = None  # type: ignore
-    apply_move = None  # type: ignore
-    legal_moves = None  # type: ignore
-    check_status = None  # type: ignore
-    undo = None  # type: ignore
-    reset = None  # type: ignore
-    HistoryStack = None  # type: ignore
-    choose_ai_move = None  # type: ignore
-    exploit_scan = None  # type: ignore
+    GameConfig = None  
+    GameState = None  
+    new_state = None  
+    apply_move = None  
+    legal_moves = None  
+    check_status = None  
+    undo = None  
+    reset = None  
+    HistoryStack = None  
+    choose_ai_move = None  
+    exploit_scan = None  
     _IMPORT_ERROR = str(e)
 else:
     _IMPORT_ERROR = ""
@@ -45,8 +45,7 @@ else:
 def _engine_ready() -> Tuple[bool, str]:
     if _IMPORT_ERROR:
         return False, (
-            "Game engine import failed. Make sure game/ modules exist and match names. "
-            f"Import error: {_IMPORT_ERROR}"
+            f"Import error: {_IMPORT_ERROR}" 
         )
     required = ["new_state", "apply_move", "legal_moves", "check_status", "HistoryStack", "choose_ai_move", "exploit_scan", "undo", "reset"]
     missing = [name for name in required if globals().get(name) is None]
@@ -126,13 +125,11 @@ def api_new():
 
     global STATE, CONFIG, HISTORY
     try:
-        # Your GameConfig only has size/win_len/starting_player
         CONFIG = GameConfig(size=board_size, win_len=win_len, starting_player="X")
         STATE = new_state(CONFIG)
         HISTORY = HistoryStack()
-        # Store mode/difficulty on flask side (not in GameConfig)
-        api_new._mode = mode  # type: ignore
-        api_new._difficulty = difficulty  # type: ignore
+        api_new._mode = mode  
+        api_new._difficulty = difficulty  
     except Exception as e:
         return _json_err("Failed to start new match.", 500, {"error": str(e)})
 
@@ -174,17 +171,16 @@ def api_move():
 
     global STATE, CONFIG, HISTORY
 
-    mode = getattr(api_new, "_mode", MODE_VS_SYSTEM)  # type: ignore
-    difficulty = getattr(api_new, "_difficulty", DIFFICULTY_MEDIUM)  # type: ignore
+    mode = getattr(api_new, "_mode", MODE_VS_SYSTEM)  
+    difficulty = getattr(api_new, "_difficulty", DIFFICULTY_MEDIUM)  
 
     try:
-        # Human move
+        
         STATE = apply_move(STATE, CONFIG, HISTORY, int(pos))
         status = check_status(STATE)
 
         ai_meta = None
 
-        # AI reply
         if mode == MODE_VS_SYSTEM and status["state"] == "ONGOING":
             ai_pos, ai_meta = choose_ai_move(STATE, CONFIG, difficulty=str(difficulty))
             if ai_pos is not None:

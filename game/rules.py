@@ -9,7 +9,7 @@ def check_winner(board: List[List[Cell]], win_len: int) -> Tuple[Optional[Player
     """
     Returns:
       (winner, win_line_coords) if someone won
-      (None, None) otherwise
+      (None, None) sinon
     """
     n = len(board)
     if n == 0:

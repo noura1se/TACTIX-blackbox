@@ -61,8 +61,10 @@ def apply_move_rc(
     history: HistoryStack,
     r: int,
     c: int
-) -> MoveResult:
+) -> MoveResult: 
     """
+    explication importante : 
+
     Applies a move for current_player at (r,c).
     Pushes a snapshot to history before mutating.
 
@@ -135,11 +137,11 @@ def reset_rc(state: GameState, config: GameConfig, history: HistoryStack) -> Mov
 
 
 # ==========================================================
-# ✅ COMPATIBILITY LAYER (what Flask + AI will call)
+#  COMPATIBILITY LAYER 
 # ==========================================================
 
 def legal_moves(state: GameState) -> List[int]:
-    """Return legal moves as positions 0..n*n-1 (Flask-friendly)."""
+    """Return legal moves as positions 0..n*n-1 """
     n = len(state.board)
     return [r * n + c for (r, c) in available_moves(state)]
 
@@ -151,7 +153,7 @@ def _pos_to_rc(state: GameState, pos: int) -> Tuple[int, int]:
 
 
 def check_status(state: GameState) -> Dict[str, Any]:
-    """Return Flask-friendly status object."""
+    
     if state.winner is not None:
         return {"state": "WIN", "winner": state.winner, "winLine": state.win_line}
     if state.is_draw:
@@ -160,10 +162,7 @@ def check_status(state: GameState) -> Dict[str, Any]:
 
 
 def apply_move(state: GameState, config: GameConfig, history: HistoryStack, pos: int) -> GameState:
-    """
-    Flask-friendly apply_move using a single 'pos'.
-    Raises ValueError on invalid move.
-    """
+    
     r, c = _pos_to_rc(state, pos)
     res = apply_move_rc(state, config, history, r, c)
     if not res.valid:

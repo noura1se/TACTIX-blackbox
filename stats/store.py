@@ -51,7 +51,7 @@ class StatsStore:
             conn.commit()
 
     def load(self) -> Dict[str, Any]:
-        """Return a JSON-like structure so stats/metrics.py keeps working."""
+
         with self._connect() as conn:
             rows = conn.execute(
                 "SELECT ts, board_size, difficulty, mode, result, winner FROM games ORDER BY id ASC"

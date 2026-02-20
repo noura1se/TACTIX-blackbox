@@ -5,7 +5,7 @@ from typing import Tuple, List, Dict
 Move = Tuple[int, int]
 
 # ----------------------------
-# ADAPTER LAYER (edit me)
+# ADAPTER LAYER 
 # ----------------------------
 def grid_and_size(state):
     b = getattr(state, "board", state)
@@ -19,7 +19,7 @@ def opponent(p: int) -> int:
     return -p if p in (-1, 1) else (2 if p == 1 else 1)
 
 def win_length(config, state) -> int:
-    # config.win_length OR config.k OR state.config.win_length ...
+    
     if config is not None:
         for k in ("win_length", "k", "K"):
             if hasattr(config, k):
@@ -34,18 +34,13 @@ def win_length(config, state) -> int:
 # HEURISTIC EVAL
 # ----------------------------
 def evaluate(state, config=None, perspective_player: int | None = None) -> int:
-    """
-    Positive good for perspective_player, negative bad.
-    Heuristic: score open lines / segments approaching K-in-row,
-    plus slight center preference.
-    """
+    
     g, n = grid_and_size(state)
-    k = win_length(config, state)
+    k = win_length(config, state) 
 
     p = perspective_player if perspective_player is not None else current_player(state)
     o = opponent(p)
 
-    # Hard terminal bonuses handled in minimax; still safe to keep big weights here.
     score_p = _lines_score(g, n, k, p)
     score_o = _lines_score(g, n, k, o)
 
@@ -59,7 +54,6 @@ def _center_bonus(g, n: int, player: int) -> int:
     for r in range(n):
         for c in range(n):
             if g[r][c] == player:
-                # closer to center => more
                 d = abs(r - mid) + abs(c - mid)
                 s += int((n - d) * 2)
     return s
@@ -80,11 +74,10 @@ def _lines_score(g, n: int, k: int, player: int) -> int:
             return 0
         cnt = sum(1 for x in cells if x == player)
         if cnt == 0:
-            return 1  # tiny value for pure emptiness (keeps some structure)
+            return 1  
         # aggressive growth as we approach k
-        # e.g., cnt=1 => 6, cnt=2 => 25, cnt=3 => 70 (for k=4/5 still good)
         base = cnt * cnt * 8 + cnt * 2
-        # near-win bump
+        # near-win 
         if cnt == k - 1:
             base += 250
         return base

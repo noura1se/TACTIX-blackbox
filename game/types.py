@@ -6,7 +6,7 @@ from typing import List, Optional, Tuple, Literal
 
 Player = Literal["X", "O"]
 Cell = Optional[Player]
-Coord = Tuple[int, int]  # (row, col)
+Coord = Tuple[int, int] 
 
 
 @dataclass(frozen=True)

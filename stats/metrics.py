@@ -32,7 +32,7 @@ def build_dashboard(raw: Dict[str, Any]) -> Dict[str, Any]:
         result = str(g.get("result", "")).upper()
         winner = g.get("winner", None)
 
-        totals["gamesPlayed"] += 0  # already counted
+        totals["gamesPlayed"] += 0  
         by_size[size]["games"] += 1
         by_diff[diff]["games"] += 1
         by_mode[mode]["games"] += 1
@@ -53,10 +53,8 @@ def build_dashboard(raw: Dict[str, Any]) -> Dict[str, Any]:
             if winner is not None:
                 totals["winsByWinner"][str(winner)] += 1
 
-    # Convert defaultdict to normal dict
     totals["winsByWinner"] = dict(totals["winsByWinner"])
 
-    # Add win/draw rates
     def enrich(group: Dict[str, Dict[str, int]]) -> Dict[str, Any]:
         out = {}
         for k, v in group.items():

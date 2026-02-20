@@ -3,7 +3,7 @@ import sys
 from datetime import datetime
 
 # =========================
-# Terminal colors (ANSI)
+# Terminal colors 
 # =========================
 RESET = "\033[0m"
 DIM = "\033[2m"
