@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>TACTIX // BLACKBOX - UI Demo</title>
+    <title>TACTIX // BLACKBOX - Project Sheet</title>
     
     <!-- Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -158,55 +158,61 @@
                     <span class="text-breach-red">BLACKBOX</span>
                 </h1>
                 <p class="font-mono text-xl text-gray-400 uppercase tracking-widest">
-                    <span class="text-neon-purple">◆</span> UI Component Demo <span class="text-neon-purple">◆</span>
+                    <span class="text-neon-purple">◆</span> Project Concept & Visual Identity <span class="text-neon-purple">◆</span>
                 </p>
             </header>
             
             <!-- Components Grid -->
             <div class="grid grid-cols-1 md:grid-cols-2 gap-8 mb-12">
                 
-                <!-- Card Demo -->
+                <!-- Project Vision -->
                 <div class="neon-card p-6">
                     <h2 class="font-display font-bold text-xl text-neon-cyan uppercase tracking-wider mb-4 animate-flicker">
-                        Neon Card
+                        Project Vision
                     </h2>
                     <p class="text-gray-300 mb-4 leading-relaxed">
-                        A cyberpunk-styled card component with neon borders, corner decorations, and glow effects.
-                        Perfect for displaying game stats, system info, or any content that needs that futuristic edge.
+                        TACTIX // BLACKBOX is a strategic tic-tac-toe engine (3×3, 4×4, 5×5) based on game trees and Minimax.
+                        We wanted something more than a basic game: an operator vs system simulation with a “cyber” atmosphere.
+                        The goal was to mix clean logic + immersive UI, and keep the code modular and testable.
                     </p>
-                    <div class="flex gap-2">
+                    <div class="flex gap-2 flex-wrap">
                         <span class="px-3 py-1 bg-neon-cyan/10 border border-neon-cyan/30 rounded text-neon-cyan text-xs font-mono">
-                            GLOW EFFECT
+                            MINIMAX
                         </span>
                         <span class="px-3 py-1 bg-neon-purple/10 border border-neon-purple/30 rounded text-neon-purple text-xs font-mono">
-                            BACKDROP BLUR
+                            MODULAR
+                        </span>
+                        <span class="px-3 py-1 bg-neon-green/10 border border-neon-green/30 rounded text-neon-green text-xs font-mono">
+                            GAME ENGINE
                         </span>
                     </div>
                 </div>
                 
-                <!-- Button Demo -->
+                <!-- Core Modules -->
                 <div class="neon-card p-6">
                     <h2 class="font-display font-bold text-xl text-neon-purple uppercase tracking-wider mb-4">
-                        Neon Buttons
+                        Core Modules
                     </h2>
                     <p class="text-gray-300 mb-4 leading-relaxed">
-                        Interactive buttons with hover effects, corner accents, and customizable colors.
+                        The project is split into clear parts: game logic, AI decisions, and persistent stats.
+                        The UI only coordinates actions, while the backend engine guarantees legality and consistency.
+                        This separation helped us debug faster and keep the system stable.
                     </p>
                     <div class="space-y-3">
-                        <button class="neon-button w-full">INITIATE BREACH</button>
+                        <button class="neon-button w-full">GAME ENGINE</button>
                         <button class="neon-button w-full" style="border-color: #b833ff; color: #b833ff;">
-                            CONFIGURE SYSTEM
+                            AI MODULE
                         </button>
                         <button class="neon-button w-full" style="border-color: #00ff9f; color: #00ff9f;">
-                            VIEW STATISTICS
+                            STATISTICS SYSTEM
                         </button>
                     </div>
                 </div>
                 
-                <!-- Game Grid Demo -->
+                <!-- Game Engine Overview -->
                 <div class="neon-card p-6 md:col-span-2">
                     <h2 class="font-display font-bold text-xl text-neon-green uppercase tracking-wider mb-4">
-                        Game Grid Demo
+                        Game Engine Overview
                     </h2>
                     <div class="flex flex-col md:flex-row gap-8 items-center">
                         <div class="game-grid">
@@ -232,28 +238,29 @@
                         </div>
                         <div class="flex-1">
                             <p class="text-gray-300 mb-4 leading-relaxed">
-                                Interactive 3×3 grid with neon glow effects on hover.
-                                Supports multiple grid sizes (3×3, 4×4, 5×5) and win-line animations.
+                                Dynamic grid engine supporting 3×3, 4×4 and 5×5 boards.
+                                Each move is validated, then the state is updated, and the win/draw condition is checked.
+                                We also track history to enable Undo and keep the flow controlled.
                             </p>
                             <div class="font-mono text-sm space-y-2">
                                 <div class="flex items-center gap-2">
                                     <span class="text-neon-cyan">></span>
-                                    <span class="text-gray-500">Turn: OPERATOR (X)</span>
+                                    <span class="text-gray-500">Move validation: enforced</span>
                                 </div>
                                 <div class="flex items-center gap-2">
                                     <span class="text-neon-purple">></span>
-                                    <span class="text-gray-500">Moves: 5/9</span>
+                                    <span class="text-gray-500">State update: synchronized</span>
                                 </div>
                                 <div class="flex items-center gap-2">
                                     <span class="text-neon-green">✓</span>
-                                    <span class="text-gray-500">System: READY</span>
+                                    <span class="text-gray-500">Consistency: verified</span>
                                 </div>
                             </div>
                         </div>
                     </div>
                 </div>
                 
-                <!-- Terminal Demo -->
+                <!-- System Log -->
                 <div class="neon-card p-0 md:col-span-2" style="border-color: rgba(0, 246, 255, 0.3);">
                     <!-- Terminal Header -->
                     <div class="bg-grid-line/50 px-4 py-2 flex items-center justify-between border-b border-neon-cyan/20">
@@ -274,11 +281,11 @@
                     <div class="p-4 font-mono text-sm space-y-1">
                         <div class="flex gap-3">
                             <span class="text-neon-cyan">></span>
-                            <span class="text-gray-300">BREACH PROTOCOL v2.0 - LOADING...</span>
+                            <span class="text-gray-300">Booting game engine...</span>
                         </div>
                         <div class="flex gap-3">
                             <span class="text-neon-purple">◆</span>
-                            <span class="text-gray-400">Initializing neural grid interface...</span>
+                            <span class="text-gray-400">Loading Minimax decision core...</span>
                         </div>
                         <div class="flex gap-3">
                             <span class="text-neon-cyan">></span>
@@ -286,22 +293,25 @@
                         </div>
                         <div class="flex gap-3">
                             <span class="text-neon-green">✓</span>
-                            <span class="text-gray-300">Operator vs System mode: READY</span>
+                            <span class="text-gray-300">Stats persistence: SQLite connected</span>
                         </div>
                         <div class="flex gap-3">
                             <span class="text-breach-red">>></span>
-                            <span class="text-breach-red">ALL SYSTEMS OPERATIONAL - READY FOR BREACH</span>
+                            <span class="text-breach-red">SYSTEM READY - WAITING FOR OPERATOR INPUT</span>
                         </div>
                     </div>
                 </div>
                 
             </div>
             
-            <!-- Color Palette -->
+            <!-- Design System -->
             <div class="neon-card p-6">
-                <h2 class="font-display font-bold text-xl text-neon-cyan uppercase tracking-wider mb-6">
-                    Color Palette
+                <h2 class="font-display font-bold text-xl text-neon-cyan uppercase tracking-wider mb-2">
+                    Design System
                 </h2>
+                <p class="text-gray-400 mb-6 font-mono text-sm">
+                    Cyber-security dashboard inspiration: each color has a role inside the interface (actions, warnings, status).
+                </p>
                 <div class="grid grid-cols-2 md:grid-cols-5 gap-4">
                     <div class="text-center">
                         <div class="w-full h-20 bg-neon-cyan rounded mb-2"></div>
@@ -337,7 +347,7 @@
                     <span class="text-neon-cyan">SYSTEM STATUS:</span> 
                     <span class="text-neon-green animate-pulse-slow">OPERATIONAL</span>
                 </p>
-                <p>TACTIX // BLACKBOX - Phase 2: Frontend UI Demo</p>
+                <p>TACTIX // BLACKBOX - Project Sheet (UI + Engine + Stats)</p>
             </footer>
             
         </div>
