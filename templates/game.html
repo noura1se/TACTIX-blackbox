@@ -1,0 +1,595 @@
+{% extends "layout.html" %}
+{% from "partials/neon_card.html" import neon_card %}
+{% from "partials/neon_button.html" import danger_button, ghost_button %}
+
+{% block title %}TACTIX // BLACKBOX - BREACH IN PROGRESS{% endblock %}
+
+{% block extra_head %}
+<style>
+
+/* ===== TERMINAL MESSAGES ===== */
+#terminal-messages {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 0.85rem;
+    color: #00ff9f;
+    text-shadow: 0 0 10px rgba(0, 255, 159, 0.5);
+    padding: 1rem 0;
+    min-height: 60px;
+    display: flex;
+    flex-direction: column;
+    gap: 0.3rem;
+    letter-spacing: 1px;
+}
+
+.terminal-line {
+    opacity: 0;
+    animation: terminalFadeIn 0.5s ease forwards;
+}
+
+.terminal-line::before {
+    content: '>> ';
+    color: #00f6ff;
+    margin-right: 0.5rem;
+}
+
+@keyframes terminalFadeIn {
+    from {
+        opacity: 0;
+        transform: translateX(-10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+.terminal-line.old {
+    opacity: 0.4;
+}
+
+.terminal-cursor {
+    display: inline-block;
+    width: 8px;
+    height: 1em;
+    background-color: #00ff9f;
+    margin-left: 2px;
+    animation: blink 1s step-end infinite;
+}
+
+@keyframes blink {
+    0%, 50% { opacity: 1; }
+    51%, 100% { opacity: 0; }
+}
+
+/* ===== GAME BOARD WRAPPER ===== */
+#game-board-container {
+    width: 100%;
+    padding: 1rem 0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+/* ===== GAME BOARD ===== */
+.game-grid {
+    display: grid !important;
+    grid-template-columns: repeat(3, 1fr) !important;
+    gap: 4px !important;
+    background: rgba(0, 246, 255, 0.5) !important;
+    border: 3px solid #00f6ff !important;
+    border-radius: 8px !important;
+    width: min(100%, 480px) !important;
+    height: min(80vw, 480px) !important;
+    max-width: 480px !important;
+    margin: 0 auto !important;
+    padding: 4px !important;
+    box-shadow: 0 0 30px rgba(0, 246, 255, 0.3);
+    box-sizing: border-box !important;
+}
+
+.game-grid.size-3 { grid-template-columns: repeat(3, 1fr) !important; }
+.game-grid.size-4 { grid-template-columns: repeat(4, 1fr) !important; }
+.game-grid.size-5 { grid-template-columns: repeat(5, 1fr) !important; }
+
+/* ===== GRID CELLS ===== */
+.grid-cell {
+    background: #0a0a0f !important;
+    border: none !important;
+    border-radius: 4px !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    cursor: pointer;
+    width: 100% !important;
+    height: 100% !important;
+    transition: background 0.2s ease, box-shadow 0.2s ease;
+    position: relative;
+    overflow: hidden;
+}
+
+.grid-cell:hover:not(.occupied) {
+    background: rgba(0, 246, 255, 0.12) !important;
+    box-shadow: inset 0 0 20px rgba(0, 246, 255, 0.2);
+}
+
+.grid-cell.occupied { cursor: not-allowed; }
+
+.cell-symbol {
+    font-family: 'Orbitron', monospace;
+    font-size: clamp(2rem, 5vw, 4rem);
+    font-weight: 900;
+    line-height: 1;
+    animation: symbolAppear 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55) forwards;
+}
+
+.cell-symbol.player-x {
+    color: #00f6ff;
+    text-shadow: 0 0 20px #00f6ff, 0 0 40px rgba(0, 246, 255, 0.5);
+}
+
+.cell-symbol.player-o {
+    color: #ff3366;
+    text-shadow: 0 0 20px #ff3366, 0 0 40px rgba(255, 51, 102, 0.5);
+}
+
+@keyframes symbolAppear {
+    0%   { transform: scale(0) rotate(-180deg); opacity: 0; }
+    60%  { transform: scale(1.2) rotate(10deg); opacity: 1; }
+    100% { transform: scale(1) rotate(0deg); opacity: 1; }
+}
+
+.grid-cell.win-cell {
+    background: rgba(0, 255, 159, 0.15) !important;
+    animation: winPulse 1s ease-in-out infinite;
+}
+
+@keyframes winPulse {
+    0%, 100% { box-shadow: inset 0 0 30px rgba(0, 255, 159, 0.3); }
+    50%       { box-shadow: inset 0 0 50px rgba(0, 255, 159, 0.6); }
+}
+
+.status-indicator {
+    padding: 1rem;
+    border-radius: 8px;
+    text-align: center;
+    margin-bottom: 1rem;
+}
+
+.status-indicator.active {
+    background: rgba(0, 246, 255, 0.1);
+    border: 2px solid #00f6ff;
+    box-shadow: 0 0 20px rgba(0, 246, 255, 0.2);
+}
+
+.status-indicator.waiting {
+    background: rgba(128, 128, 128, 0.1);
+    border: 2px solid #4a4a5e;
+}
+
+.status-label {
+    font-size: 0.875rem;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    color: #8892b0;
+    margin-bottom: 0.5rem;
+}
+
+.status-player {
+    font-size: 2rem;
+    font-weight: bold;
+    font-family: 'Orbitron', sans-serif;
+}
+
+.player-x { color: #00f6ff; }
+.player-o { color: #ff3366; }
+
+.move-item {
+    padding: 0.5rem 1rem;
+    margin-bottom: 0.5rem;
+    background: rgba(26, 26, 46, 0.5);
+    border-left: 3px solid #00f6ff;
+    border-radius: 4px;
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 0.875rem;
+    animation: slideInRight 0.3s ease;
+}
+
+@keyframes slideInRight {
+    from { transform: translateX(-20px); opacity: 0; }
+    to   { transform: translateX(0); opacity: 1; }
+}
+
+.game-over-overlay {
+    position: fixed;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    background: rgba(0, 0, 0, 0.9);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    z-index: 9999;
+    -webkit-backdrop-filter: blur(10px);
+    backdrop-filter: blur(10px);
+}
+
+.game-over-overlay.active { display: flex !important; }
+
+.game-over-content {
+    background: linear-gradient(135deg, #0a0a0f 0%, #1a1a2e 100%);
+    border: 3px solid #00f6ff;
+    border-radius: 12px;
+    padding: 3rem;
+    text-align: center;
+    max-width: 500px;
+    box-shadow: 0 0 50px rgba(0, 246, 255, 0.5);
+    animation: modalAppear 0.5s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+}
+
+@keyframes modalAppear {
+    0%   { transform: scale(0.5) rotate(-10deg); opacity: 0; }
+    100% { transform: scale(1) rotate(0); opacity: 1; }
+}
+
+.game-over-title {
+    font-size: 3rem;
+    font-family: 'Orbitron', sans-serif;
+    margin-bottom: 1rem;
+    text-shadow: 0 0 30px currentColor;
+}
+
+.game-over-title.victory { color: #00ff9f; }
+.game-over-title.defeat  { color: #ff3366; }
+.game-over-title.draw    { color: #b833ff; }
+
+/* ===== HACKING-THEMED ACTION BUTTONS ===== */
+.action-buttons-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+    gap: 1rem;
+    margin-top: 1.5rem;
+    padding: 0;
+}
+
+.hack-button {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 1.5rem 1rem;
+    background: linear-gradient(135deg, rgba(10, 10, 15, 0.9) 0%, rgba(20, 20, 30, 0.9) 100%);
+    border: 2px solid;
+    border-radius: 12px;
+    font-family: 'Orbitron', monospace;
+    font-weight: 700;
+    font-size: 0.75rem;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    overflow: hidden;
+    min-height: 120px;
+}
+
+.hack-button::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(135deg, transparent 0%, currentColor 100%);
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+
+.hack-button:hover::before {
+    opacity: 0.1;
+}
+
+.hack-button:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.4);
+}
+
+.hack-button:active {
+    transform: translateY(-1px);
+}
+
+.hack-button:disabled {
+    opacity: 0.3;
+    cursor: not-allowed;
+    transform: none !important;
+}
+
+.hack-button:disabled:hover::before {
+    opacity: 0;
+}
+
+/* Button Icon */
+.hack-icon {
+    width: 50px;
+    height: 50px;
+    margin-bottom: 0.75rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 2rem;
+    position: relative;
+    z-index: 1;
+    filter: drop-shadow(0 0 10px currentColor);
+}
+
+/* Button Label */
+.hack-label {
+    position: relative;
+    z-index: 1;
+    line-height: 1.4;
+}
+
+/* Scan Button - Cyan/Blue theme */
+.hack-button.scan {
+    border-color: #00f6ff;
+    color: #00f6ff;
+}
+
+.hack-button.scan:hover {
+    border-color: #33f8ff;
+    box-shadow: 0 8px 25px rgba(0, 246, 255, 0.3), 0 0 40px rgba(0, 246, 255, 0.2);
+}
+
+/* Undo Button - Orange theme */
+.hack-button.undo {
+    border-color: #ffa500;
+    color: #ffa500;
+}
+
+.hack-button.undo:hover {
+    border-color: #ffb733;
+    box-shadow: 0 8px 25px rgba(255, 165, 0, 0.3), 0 0 40px rgba(255, 165, 0, 0.2);
+}
+
+/* Reset Button - Red theme */
+.hack-button.reset {
+    border-color: #ff3366;
+    color: #ff3366;
+}
+
+.hack-button.reset:hover {
+    border-color: #ff5580;
+    box-shadow: 0 8px 25px rgba(255, 51, 102, 0.3), 0 0 40px rgba(255, 51, 102, 0.2);
+}
+
+/* Config Button - Purple theme */
+.hack-button.config {
+    border-color: #b833ff;
+    color: #b833ff;
+}
+
+.hack-button.config:hover {
+    border-color: #c653ff;
+    box-shadow: 0 8px 25px rgba(184, 51, 255, 0.3), 0 0 40px rgba(184, 51, 255, 0.2);
+}
+
+/* Scan hint styles */
+.scan-hint {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 80%;
+    height: 80%;
+    border-radius: 4px;
+    pointer-events: none;
+    z-index: 5;
+    animation: scanPulse 1.5s ease-in-out infinite;
+}
+
+.scan-hint.best {
+    background: rgba(0, 255, 159, 0.15);
+    border: 2px solid #00ff9f;
+    box-shadow: 0 0 20px rgba(0, 255, 159, 0.4), inset 0 0 20px rgba(0, 255, 159, 0.2);
+}
+
+.scan-hint.danger {
+    background: rgba(255, 51, 102, 0.15);
+    border: 2px solid #ff3366;
+    box-shadow: 0 0 20px rgba(255, 51, 102, 0.4), inset 0 0 20px rgba(255, 51, 102, 0.2);
+}
+
+.scan-hint.fork {
+    background: rgba(255, 165, 0, 0.15);
+    border: 2px solid #ffa500;
+    box-shadow: 0 0 20px rgba(255, 165, 0, 0.4), inset 0 0 20px rgba(255, 165, 0, 0.2);
+}
+
+.scan-hint.center {
+    background: rgba(179, 51, 255, 0.1);
+    border: 2px solid #b833ff;
+    box-shadow: 0 0 15px rgba(179, 51, 255, 0.3), inset 0 0 15px rgba(179, 51, 255, 0.1);
+}
+
+@keyframes scanPulse {
+    0%, 100% { opacity: 0.6; transform: translate(-50%, -50%) scale(0.95); }
+    50% { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+}
+
+.scan-label {
+    position: absolute;
+    top: -25px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: rgba(0, 0, 0, 0.9);
+    padding: 2px 8px;
+    border-radius: 4px;
+    font-size: 0.7rem;
+    font-family: 'Orbitron', monospace;
+    white-space: nowrap;
+    font-weight: bold;
+    letter-spacing: 1px;
+}
+
+.scan-label.best { color: #00ff9f; border: 1px solid #00ff9f; }
+.scan-label.danger { color: #ff3366; border: 1px solid #ff3366; }
+.scan-label.fork { color: #ffa500; border: 1px solid #ffa500; }
+.scan-label.center { color: #b833ff; border: 1px solid #b833ff; }
+
+@media (max-width: 768px) {
+    .grid-cell { min-height: 70px !important; }
+    .cell-symbol { font-size: 2.5rem; }
+    .scan-label { font-size: 0.6rem; top: -20px; }
+    .hack-button {
+        min-height: 100px;
+        padding: 1rem 0.75rem;
+    }
+    .hack-icon {
+        width: 40px;
+        height: 40px;
+        font-size: 1.5rem;
+        margin-bottom: 0.5rem;
+    }
+    .hack-label {
+        font-size: 0.7rem;
+    }
+    #terminal-messages {
+        font-size: 0.75rem;
+        min-height: 50px;
+    }
+}
+
+@media (max-width: 640px) {
+    .action-buttons-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container mx-auto px-4 py-8">
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        
+        <div class="lg:col-span-2">
+            {% call neon_card(title='BREACH GRID', color='cyan', glow=true, scanline=true) %}
+                <!-- Terminal Messages -->
+                <div id="terminal-messages">
+                    <div class="terminal-line">OPERATOR ACCESS GRANTED</div>
+                    <div class="terminal-line">SYSTEM RESPONDING<span class="terminal-cursor"></span></div>
+                </div>
+                
+                <div id="game-board-container">
+                    <div id="game-board" class="game-grid size-3">
+                        <!-- Board built by game.js -->
+                    </div>
+                </div>
+                <div id="game-status" class="mt-4 text-center text-lg font-mono">
+                    <span class="text-cyan-400">●</span> READY TO BREACH
+                </div>
+            {% endcall %}
+
+            <!-- HACKING-THEMED ACTION BUTTONS -->
+            <div class="action-buttons-grid">
+                <button id="btn-scan" class="hack-button scan">
+                    <div class="hack-icon">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <circle cx="12" cy="12" r="10"/>
+                            <path d="M12 6v6l4 2"/>
+                            <circle cx="12" cy="12" r="3"/>
+                        </svg>
+                    </div>
+                    <div class="hack-label">Exploit<br>Scan</div>
+                </button>
+
+                <button id="btn-undo" class="hack-button undo">
+                    <div class="hack-icon">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M3 7v6h6"/>
+                            <path d="M21 17a9 9 0 00-9-9 9 9 0 00-9 9"/>
+                        </svg>
+                    </div>
+                    <div class="hack-label">Firewall<br>Rollback</div>
+                </button>
+
+                <button id="btn-reset" class="hack-button reset">
+                    <div class="hack-icon">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <circle cx="12" cy="12" r="10"/>
+                            <path d="M12 8v8M8 12h8"/>
+                        </svg>
+                    </div>
+                    <div class="hack-label">Reset<br>System</div>
+                </button>
+
+                <a href="/configure" class="hack-button config">
+                    <div class="hack-icon">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <circle cx="12" cy="12" r="3"/>
+                            <path d="M12 1v6m0 6v6M4.22 4.22l4.24 4.24m5.08 5.08l4.24 4.24M1 12h6m6 0h6M4.22 19.78l4.24-4.24m5.08-5.08l4.24-4.24"/>
+                        </svg>
+                    </div>
+                    <div class="hack-label">Configure<br>Game</div>
+                </a>
+            </div>
+        </div>
+
+        <div class="space-y-6">
+            {% call neon_card(title='SYSTEM STATUS', color='cyan') %}
+                <div id="status-operator" class="status-indicator active">
+                    <div class="status-label">Operator</div>
+                    <div class="status-player player-x">X</div>
+                    <div class="text-sm text-cyan-400 mt-2">● ACTIVE</div>
+                </div>
+                <div id="status-system" class="status-indicator waiting">
+                    <div class="status-label">System</div>
+                    <div class="status-player player-o">O</div>
+                    <div class="text-sm text-gray-500 mt-2">○ WAITING</div>
+                </div>
+            {% endcall %}
+
+            {% call neon_card(title='BREACH INFO', color='purple') %}
+                <div class="space-y-2 text-sm font-mono">
+                    <div class="flex justify-between">
+                        <span class="text-gray-400">Grid Size:</span>
+                        <span id="info-grid-size" class="text-purple-400">3x3</span>
+                    </div>
+                    <div class="flex justify-between">
+                        <span class="text-gray-400">Mode:</span>
+                        <span id="info-mode" class="text-purple-400">vs AI</span>
+                    </div>
+                    <div class="flex justify-between">
+                        <span class="text-gray-400">Difficulty:</span>
+                        <span id="info-difficulty" class="text-purple-400">EASY</span>
+                    </div>
+                    <div class="flex justify-between">
+                        <span class="text-gray-400">Moves:</span>
+                        <span id="info-moves" class="text-cyan-400">0</span>
+                    </div>
+                </div>
+            {% endcall %}
+
+            {% call neon_card(title='MOVE LOG', color='green') %}
+                <div id="move-history" class="max-h-64 overflow-y-auto space-y-2">
+                    <div class="text-center text-gray-500 text-sm">No moves yet</div>
+                </div>
+            {% endcall %}
+        </div>
+    </div>
+</div>
+
+<div id="game-over-overlay" class="game-over-overlay">
+    <div class="game-over-content">
+        <h2 id="game-over-title" class="game-over-title"></h2>
+        <p id="game-over-message" class="text-xl mb-6"></p>
+        <div class="space-y-4">
+            <button id="btn-play-again" class="neon-button w-full">PLAY AGAIN</button>
+            <a href="/configure" class="neon-button w-full block">NEW CONFIGURATION</a>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script src="{{ url_for('static', filename='js/ui.js') }}"></script>
+<script src="{{ url_for('static', filename='js/game.js') }}"></script>
+<script src="{{ url_for('static', filename='js/terminal.js') }}"></script>
+{% endblock %}
